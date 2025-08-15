@@ -28,9 +28,14 @@ npm run dev
 
 Browse to [http://localhost:3000](http://localhost:3000)
 
+## OpenVAT Export Settings Example
+
+![OpenVAT Export Settings Screenshot](./docs/img/OpenVATExportSettings.png)
+
 ## Limitations
 
-Currently, models have to be exported with these settings in OpenVAT:
+> [!NOTE]
+> Currently, models have to be exported with these settings in OpenVAT:
 
 * Separate position and normal textures
 * glTF only (FBX forces trianglution on import in three.js which messes up the vertex count)
