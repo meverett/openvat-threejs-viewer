@@ -3,16 +3,20 @@
 An early proof-of-concept WebGL viewer based on [three.js](https://threejs.org/) for viewing
 Vertext Animation Textures exported from [OpenVAT](https://openvat.org/).
 
+![OpenVAT WebGL Viewer Demo Screenshot](./docs/img/DemoScreenshot.png)
+
 ## Stack
 * three.js
 * React Fiber
 * Next.js
-* Tuboback
+* Turbopack
 * Tailwind CSS
 
 ## Building
 
-Set this repository as the current directory and then run:
+Make sure [npm](https://www.npmjs.com/) is installed.
+
+From a terminal, set this repository as the current directory and then run:
 
 ```shell
 npm install
@@ -26,7 +30,8 @@ Browse to [http://localhost:3000](http://localhost:3000)
 
 ## Limitations
 
-Currently models have to be exported with these settings in OpenVAT:
+Currently, models have to be exported with these settings in OpenVAT:
+
 * Separate position and normal textures
 * glTF only (FBX forces trianglution on import in three.js which messes up the vertex count)
 * OpenVAT glTF export currently strips materials during export from Blender, but you can manaully re-add and re-export

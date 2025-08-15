@@ -468,102 +468,98 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           </div>
         </div>
 
-        {/* Scene Controls */}
-        <div className="bg-black/80 text-white p-4 rounded-lg min-w-[250px]">
-          <h4 className="text-lg font-semibold mb-3">Scene Controls</h4>
-          
-          <div className="space-y-4">
-            {/* Ambient Light Controls */}
-            <div className="space-y-2">
-              <h5 className="text-sm font-semibold text-gray-300">Ambient Light</h5>
+            {/* Scene Controls */}
+            <div className="bg-black text-white p-4 rounded-lg min-w-[250px]">
+              {/* Ambient Light Controls */}
               <div className="space-y-2">
-                <div>
-                  <label className="block text-sm mb-1">Color:</label>
-                  <input 
-                    type="color" 
-                    value={ambientLightColor}
-                    onChange={(e) => setAmbientLightColor(e.target.value)}
-                    className="w-full h-8 rounded border border-white/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">
-                    Intensity: <span>{ambientLightIntensity.toFixed(2)}</span>
-                  </label>
-                  <input 
-                    type="range" 
-                    min={0.0} 
-                    max={10.0} 
-                    step={0.01} 
-                    value={ambientLightIntensity}
-                    onChange={(e) => setAmbientLightIntensity(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
+                <h5 className="text-sm font-semibold text-gray-300">Ambient Light</h5>
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <label className="block text-sm mb-1">Color:</label>
+                    <input 
+                      type="color" 
+                      value={ambientLightColor}
+                      onChange={(e) => setAmbientLightColor(e.target.value)}
+                      className="w-16 h-8 rounded border border-white/30"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm mb-1">
+                      Intensity: <span>{ambientLightIntensity.toFixed(2)}</span>
+                    </label>
+                    <input 
+                      type="range" 
+                      min={0.0} 
+                      max={10.0} 
+                      step={0.01} 
+                      value={ambientLightIntensity}
+                      onChange={(e) => setAmbientLightIntensity(parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Directional Light Controls */}
-            <div className="space-y-2">
-              <h5 className="text-sm font-semibold text-gray-300">Directional Light</h5>
+              {/* Directional Light Controls */}
               <div className="space-y-2">
-                <div>
-                  <label className="block text-sm mb-1">Color:</label>
-                  <input 
-                    type="color" 
-                    value={directionalLightColor}
-                    onChange={(e) => setDirectionalLightColor(e.target.value)}
-                    className="w-full h-8 rounded border border-white/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">
-                    Intensity: <span>{directionalLightIntensity.toFixed(2)}</span>
-                  </label>
-                  <input 
-                    type="range" 
-                    min={0.0} 
-                    max={10.0} 
-                    step={0.01} 
-                    value={directionalLightIntensity}
-                    onChange={(e) => setDirectionalLightIntensity(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
+                <h5 className="text-sm font-semibold text-gray-300">Directional Light</h5>
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <label className="block text-sm mb-1">Color:</label>
+                    <input 
+                      type="color" 
+                      value={directionalLightColor}
+                      onChange={(e) => setDirectionalLightColor(e.target.value)}
+                      className="w-16 h-8 rounded border border-white/30"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm mb-1">
+                      Intensity: <span>{directionalLightIntensity.toFixed(2)}</span>
+                    </label>
+                    <input 
+                      type="range" 
+                      min={0.0} 
+                      max={10.0} 
+                      step={0.01} 
+                      value={directionalLightIntensity}
+                      onChange={(e) => setDirectionalLightIntensity(parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Point Light Controls */}
-            <div className="space-y-2">
-              <h5 className="text-sm font-semibold text-gray-300">Point Light</h5>
+              {/* Point Light Controls */}
               <div className="space-y-2">
-                <div>
-                  <label className="block text-sm mb-1">Color:</label>
-                  <input 
-                    type="color" 
-                    value={pointLightColor}
-                    onChange={(e) => setPointLightColor(e.target.value)}
-                    className="w-full h-8 rounded border border-white/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">
-                    Intensity: <span>{pointLightIntensity.toFixed(2)}</span>
-                  </label>
-                  <input 
-                    type="range" 
-                    min={0.0} 
-                    max={10.0} 
-                    step={0.01} 
-                    value={pointLightIntensity}
-                    onChange={(e) => setPointLightIntensity(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
+                <h5 className="text-sm font-semibold text-gray-300">Point Light</h5>
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <label className="block text-sm mb-1">Color:</label>
+                    <input 
+                      type="color" 
+                      value={pointLightColor}
+                      onChange={(e) => setPointLightColor(e.target.value)}
+                      className="w-16 h-8 rounded border border-white/30"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm mb-1">
+                      Intensity: <span>{pointLightIntensity.toFixed(2)}</span>
+                    </label>
+                    <input 
+                      type="range" 
+                      min={0.0} 
+                      max={10.0} 
+                      step={0.01} 
+                      value={pointLightIntensity}
+                      onChange={(e) => setPointLightIntensity(parseFloat(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
       </div>
       
       {/* Left Side Controls Container */}
