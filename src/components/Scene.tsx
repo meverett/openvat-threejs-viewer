@@ -5,7 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { MeshStandardMaterialOpenVAT } from '../threejs/materials/MeshStandardMaterialOpenVAT.js';
+import { MeshStandardOpenVATMaterial } from '../threejs/materials/MeshStandardMaterialOpenVAT.js';
 
 interface VATParams {
   minValues: THREE.Vector3;
@@ -221,7 +221,7 @@ const Scene: React.FC<SceneProps> = ({
           console.log(mesh.geometry.attributes);
 
           const originalMaterial = mesh.material;
-          const vatMaterial = new MeshStandardMaterialOpenVAT(originalMaterial);
+          const vatMaterial = new MeshStandardOpenVATMaterial(originalMaterial);
           mesh.material = vatMaterial;
 
           // Configure VAT uniforms
@@ -288,7 +288,7 @@ const Scene: React.FC<SceneProps> = ({
     const geometry = new THREE.BoxGeometry(2, 2, 2);
     ensureUVCoordinates(geometry);
     
-    const material = new MeshStandardMaterialOpenVAT();
+    const material = new MeshStandardOpenVATMaterial();
     if (vatTexture) material.uniforms.vat_position_texture.value = vatTexture;
     if (vatNormalTexture) material.uniforms.vat_normal_texture.value = vatNormalTexture;
     if (vatParams) {

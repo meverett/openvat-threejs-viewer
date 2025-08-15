@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export class MeshStandardMaterialOpenVAT extends THREE.MeshStandardMaterial {
+export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
     constructor(originalMaterial = null) {
         // Extract properties from original material
         const inheritedParams = {};
