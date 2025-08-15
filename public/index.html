@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenVAT WebGL - glTF Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 100;
+        }
+        
+        #error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff6b6b;
+            font-size: 16px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h3>OpenVAT Viewer</h3>
+        <p>Mouse: Rotate camera</p>
+        <p>Scroll: Zoom in/out</p>
+        <p>Right click + drag: Pan</p>
+    </div>
+    
+    <!-- Overlay Controls Container -->
+    <div id="overlayContainer" style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+        <!-- VAT Controls -->
+        <div id="vatControls" style="position: relative; background: rgba(0, 0, 0, 0.8); color: white; padding: 15px; border-radius: 5px; font-family: Arial, sans-serif; font-size: 12px; min-width: 250px; margin-bottom: 24px;">
+            <h4>VAT Controls</h4>
+            <div style="margin-bottom: 10px; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                <div>Position Texture: <span id="textureStatus">Loading...</span></div>
+                <div>Normal Texture: <span id="normalTextureStatus">Loading...</span></div>
+                <div>Dimensions: <span id="textureDimensions">-</span></div>
+            </div>
+            <div style="margin-bottom: 10px; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                <div>Min Values: <span id="minValues">-</span></div>
+                <div>Max Values: <span id="maxValues">-</span></div>
+                <div>Frame Count: <span id="frameCount">-</span></div>
+                <div>Y Resolution: <span id="yResolution">-</span></div>
+            </div>
+            <div>
+                <label>Animated: <input type="checkbox" id="toggleAnimated" checked></label>
+            </div>
+            <div>
+                <label>Frame: <input type="range" id="frameSelect" min="0" max="59" value="0"></label>
+                <span id="frameValue">0</span>
+            </div>
+            <div>
+                <label>Speed: <input type="range" id="speed" min="0.1" max="60.0" step="0.1" value="24.0"></label>
+                <span id="speedValue">24.0</span>
+            </div>
+        </div>
+        
+        <!-- VAT Asset Files Controls -->
+        <div id="vatAssetFilesControls" style="position: relative; background: #000; color: white; padding: 15px; border-radius: 5px; font-family: Arial, sans-serif; font-size: 12px; min-width: 250px;">
+            <h4>VAT Asset Files</h4>
+            <div style="margin-bottom: 10px; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                <div>Model File:</div>
+                <input type="file" id="modelFile" accept=".glb" style="width: 100%; margin-top: 5px; color: white; background: transparent; border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 3px;">
+            </div>
+            <div style="margin-bottom: 10px; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                <div>Position Texture File:</div>
+                <input type="file" id="positionTextureFile" accept=".exr" style="width: 100%; margin-top: 5px; color: white; background: transparent; border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 3px;">
+            </div>
+            <div style="margin-bottom: 10px; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                <div>Normals Texture File:</div>
+                <input type="file" id="normalsTextureFile" accept=".exr" style="width: 100%; margin-top: 5px; color: white; background: transparent; border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 3px;">
+            </div>
+            <div style="margin-bottom: 10px; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                <div>Remap Info File:</div>
+                <input type="file" id="remapInfoFile" accept=".json" style="width: 100%; margin-top: 5px; color: white; background: transparent; border: 1px solid rgba(255,255,255,0.3); border-radius: 3px; padding: 3px;">
+            </div>
+            <div style="margin-top: 10px; padding: 5px;">
+                <button id="loadModelButton" style="width: 100%;">Load Model</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loading">Select OpenVAT files to load...</div>
+    <div id="error"></div>
+    
+    <!-- Three.js CDN with import maps -->
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <script type="module" src="js/main.js"></script>
+    
+</body>
+</html> 
