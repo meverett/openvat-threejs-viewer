@@ -133,6 +133,10 @@ const VATViewer: React.FC<VATViewerProps> = () => {
       // Model has been loaded successfully, reset the trigger
       setShouldLoadModelFromMultiFile(false);
       console.log('Multi-file model loading completed, trigger reset');
+      
+      // Automatically clear the files after successful model loading
+      // This provides a clean interface since the user no longer needs to see file info
+      clearUploadedFiles();
     }
   }, [shouldLoadModelFromMultiFile, classifiedFiles, vatTexture, vatParams]);
 
@@ -388,22 +392,22 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           <h4 className="text-lg font-semibold mb-3">VAT Controls</h4>
           
           <div className="space-y-2 mb-3 p-2 bg-white/10 rounded">
-            <div>Position Texture: <span className="text-green-400">Loaded ✓</span></div>
-            <div>Normal Texture: <span className="text-green-400">Loaded ✓</span></div>
-            <div>Dimensions: <span>{vatTexture?.image ? `${vatTexture.image.width} × ${vatTexture.image.height}` : '-'}</span></div>
+            <div className="text-sm">Position Texture: <span className="text-green-400">Loaded ✓</span></div>
+            <div className="text-sm">Normal Texture: <span className="text-green-400">Loaded ✓</span></div>
+            <div className="text-sm">Dimensions: <span>{vatTexture?.image ? `${vatTexture.image.width} × ${vatTexture.image.height}` : '-'}</span></div>
           </div>
           
           {vatParams && (
             <div className="space-y-2 mb-3 p-2 bg-white/10 rounded">
-              <div>Min Values: <span>({vatParams.minValues.x.toFixed(2)}, {vatParams.minValues.y.toFixed(2)}, {vatParams.minValues.z.toFixed(2)})</span></div>
-              <div>Max Values: <span>({vatParams.maxValues.x.toFixed(2)}, {vatParams.maxValues.y.toFixed(2)}, {vatParams.maxValues.z.toFixed(2)})</span></div>
-              <div>Frame Count: <span>{vatParams.FrameCount}</span></div>
-              <div>Y Resolution: <span>{vatParams.Y_resolution}</span></div>
+              <div className="text-sm">Min Values: <span>({vatParams.minValues.x.toFixed(2)}, {vatParams.minValues.y.toFixed(2)}, {vatParams.minValues.z.toFixed(2)})</span></div>
+              <div className="text-sm">Max Values: <span>({vatParams.maxValues.x.toFixed(2)}, {vatParams.maxValues.y.toFixed(2)}, {vatParams.maxValues.z.toFixed(2)})</span></div>
+              <div className="text-sm">Frame Count: <span>{vatParams.FrameCount}</span></div>
+              <div className="text-sm">Y Resolution: <span>{vatParams.Y_resolution}</span></div>
             </div>
           )}
           
           <div className="space-y-3">
-            <label className="flex items-center space-x-2">
+            <label className="flex items-center space-x-2 text-sm">
               <input 
                 type="checkbox" 
                 checked={isAnimated}
@@ -413,34 +417,40 @@ const VATViewer: React.FC<VATViewerProps> = () => {
               <span>Animated</span>
             </label>
             
-            <div>
-              <label className="block text-sm mb-1">
-                Frame: <span>{currentFrame}</span>
-              </label>
-              <input 
-                type="range" 
-                min={0} 
-                max={vatParams?.FrameCount ? vatParams.FrameCount - 1 : 59} 
-                value={currentFrame}
-                onChange={(e) => setCurrentFrame(parseInt(e.target.value))}
-                className="w-full"
-              />
-            </div>
+            {/* Frame Slider - Only visible when NOT animated */}
+            {!isAnimated && (
+              <div>
+                <label className="block text-sm mb-1">
+                  Frame: <span>{currentFrame + 1}</span>
+                </label>
+                <input 
+                  type="range" 
+                  min={0} 
+                  max={vatParams?.FrameCount ? vatParams.FrameCount - 1 : 59} 
+                  value={currentFrame}
+                  onChange={(e) => setCurrentFrame(parseInt(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            )}
             
-            <div>
-              <label className="block text-sm mb-1">
-                Speed: <span>{speed.toFixed(1)}</span>
-              </label>
-              <input 
-                type="range" 
-                min={0.1} 
-                max={60.0} 
-                step={0.1} 
-                value={speed}
-                onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
+            {/* Speed Slider - Only visible when animated */}
+            {isAnimated && (
+              <div>
+                <label className="block text-sm mb-1">
+                  Speed: <span>{speed.toFixed(1)}</span>
+                </label>
+                <input 
+                  type="range" 
+                  min={0.1} 
+                  max={60.0} 
+                  step={0.1} 
+                  value={speed}
+                  onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
         </div>
         
