@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
@@ -13,9 +13,97 @@ interface VATParams {
   Y_resolution: number;
 }
 
+// New interfaces for file classification
+interface ClassifiedFiles {
+  modelFile: File | null;
+  positionTexture: File | null;
+  normalTexture: File | null;
+  remapInfoFile: File | null;
+}
+
+interface FileValidationResult {
+  isValid: boolean;
+  missingFiles: string[];
+  errors: string[];
+}
+
 interface VATViewerProps {
   // Add props as needed
 }
+
+// File classification utility function
+const classifyFiles = (files: File[]): ClassifiedFiles => {
+  const modelFile = files.find(f => f.name.toLowerCase().endsWith('.glb'));
+  const remapInfoFile = files.find(f => f.name.toLowerCase().endsWith('.json'));
+  
+  const textureFiles = files.filter(f => {
+    const name = f.name.toLowerCase();
+    return name.endsWith('.exr') || name.endsWith('.png');
+  });
+  
+  // Find normal texture (ends with _vnrm before extension)
+  const normalTexture = textureFiles.find(f => {
+    const nameWithoutExt = f.name.replace(/\.(exr|png)$/i, '');
+    return nameWithoutExt.endsWith('_vnrm');
+  });
+  
+  // Find position texture (does NOT end with _vnrm before extension)
+  const positionTexture = textureFiles.find(f => {
+    const nameWithoutExt = f.name.replace(/\.(exr|png)$/i, '');
+    return !nameWithoutExt.endsWith('_vnrm');
+  });
+  
+  return {
+    modelFile: modelFile || null,
+    positionTexture: positionTexture || null,
+    normalTexture: normalTexture || null,
+    remapInfoFile: remapInfoFile || null
+  };
+};
+
+// File validation utility function
+const validateFiles = (classifiedFiles: ClassifiedFiles): FileValidationResult => {
+  const missingFiles: string[] = [];
+  const errors: string[] = [];
+  
+  if (!classifiedFiles.modelFile) {
+    missingFiles.push('Model file (.glb)');
+  }
+  
+  if (!classifiedFiles.positionTexture) {
+    missingFiles.push('Position texture (.exr or .png)');
+  }
+  
+  if (!classifiedFiles.remapInfoFile) {
+    missingFiles.push('Remap info file (.json)');
+  }
+  
+  // Note: Normal texture is optional - no validation required
+  
+  // Check for duplicate texture types only if both textures are present
+  if (classifiedFiles.positionTexture && classifiedFiles.normalTexture) {
+    const posExt = classifiedFiles.positionTexture.name.split('.').pop()?.toLowerCase();
+    const normExt = classifiedFiles.normalTexture.name.split('.').pop()?.toLowerCase();
+    
+    if (posExt === normExt) {
+      // Both textures have same extension, check if they're both _vnrm or both not _vnrm
+      const posName = classifiedFiles.positionTexture.name.replace(/\.(exr|png)$/i, '');
+      const normName = classifiedFiles.normalTexture.name.replace(/\.(exr|png)$/i, '');
+      
+      if (posName.endsWith('_vnrm') === normName.endsWith('_vnrm')) {
+        errors.push('Both texture files have the same naming convention. One should end with _vnrm and one should not.');
+      }
+    }
+  }
+  
+  const isValid = missingFiles.length === 0 && errors.length === 0;
+  
+  return {
+    isValid,
+    missingFiles,
+    errors
+  };
+};
 
 const VATViewer: React.FC<VATViewerProps> = () => {
   const [vatTexture, setVatTexture] = useState<THREE.Texture | null>(null);
@@ -32,10 +120,81 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   const [error, setError] = useState<string | null>(null);
   const [shouldLoadModel, setShouldLoadModel] = useState(false);
 
+  // New state variables for multi-file upload system
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [classifiedFiles, setClassifiedFiles] = useState<ClassifiedFiles | null>(null);
+  const [fileValidation, setFileValidation] = useState<FileValidationResult | null>(null);
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+
+  // Ref for file input element
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Reset shouldLoadModel when files change to prevent immediate loading
   useEffect(() => {
     setShouldLoadModel(false);
   }, [modelFile, positionTextureFile, normalTextureFile, remapInfoFile]);
+
+  // Handle multi-file upload and classification
+  const handleMultiFileUpload = (files: File[]) => {
+    setUploadedFiles(files);
+    setIsProcessingFiles(true);
+    
+    console.log('=== Multi-File Upload Debug ===');
+    console.log('Uploaded files:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+    
+    try {
+      // Classify the uploaded files
+      const classified = classifyFiles(files);
+      setClassifiedFiles(classified);
+      
+      // Validate the classified files
+      const validation = validateFiles(classified);
+      setFileValidation(validation);
+      
+      console.log('Files classified:', classified);
+      console.log('Validation result:', validation);
+      
+      // Additional debug info
+      console.log('File classification details:');
+      files.forEach(file => {
+        const nameWithoutExt = file.name.replace(/\.(exr|png|glb|json)$/i, '');
+        const isVnrm = nameWithoutExt.endsWith('_vnrm');
+        console.log(`- ${file.name}: extension=${file.name.split('.').pop()}, isVnrm=${isVnrm}`);
+      });
+      
+    } catch (error) {
+      console.error('Error processing files:', error);
+      setFileValidation({
+        isValid: false,
+        missingFiles: [],
+        errors: ['Error processing uploaded files']
+      });
+    } finally {
+      setIsProcessingFiles(false);
+    }
+  };
+
+  // Handle file input change for multi-file upload
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      handleMultiFileUpload(fileArray);
+    }
+  };
+
+  // Clear uploaded files
+  const clearUploadedFiles = () => {
+    setUploadedFiles([]);
+    setClassifiedFiles(null);
+    setFileValidation(null);
+    setIsProcessingFiles(false);
+    
+    // Reset the file input element to clear the displayed file count
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // Convert from useCallback to regular async functions
   const loadVATTextureFromFile = async (file: File): Promise<THREE.Texture> => {
@@ -318,6 +477,105 @@ const VATViewer: React.FC<VATViewerProps> = () => {
         <p className="text-sm">Mouse: Rotate camera</p>
         <p className="text-sm">Scroll: Zoom in/out</p>
         <p className="text-sm">Right click + drag: Pan</p>
+      </div>
+
+      {/* Multi-File Upload Panel - Left Side */}
+      <div className="absolute top-4 left-4 z-10 mt-32 bg-black/80 text-white p-4 rounded-lg min-w-[280px]">
+        <h4 className="text-lg font-semibold mb-3">Multi-File Upload</h4>
+        
+        <div className="space-y-3">
+          {/* File Input */}
+          <div>
+            <label className="block text-sm mb-2">Select VAT Files:</label>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              multiple
+              accept=".glb,.exr,.png,.json"
+              onChange={handleFileInputChange}
+              className="w-full text-white bg-transparent border border-white/30 rounded p-2 file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Select .glb, .exr, .png, and .json files (normal texture is optional)
+            </p>
+            
+            {/* File Count Display */}
+            <div className="text-xs text-gray-300 mt-1">
+              {uploadedFiles.length === 0 ? 'No files selected' : `${uploadedFiles.length} file${uploadedFiles.length === 1 ? '' : 's'} selected`}
+            </div>
+          </div>
+
+          {/* File Processing Status */}
+          {isProcessingFiles && (
+            <div className="text-center py-2">
+              <div className="text-blue-400">Processing files...</div>
+            </div>
+          )}
+
+          {/* File Validation Results */}
+          {fileValidation && (
+            <div className="space-y-2">
+              <h5 className="text-sm font-semibold">File Status:</h5>
+              
+              {/* Required Files Status */}
+              <div className="space-y-1 text-sm">
+                <div className={`flex justify-between ${classifiedFiles?.modelFile ? 'text-green-400' : 'text-red-400'}`}>
+                  <span>Model File (.glb):</span>
+                  <span>{classifiedFiles?.modelFile ? '✓' : '✗'}</span>
+                </div>
+                <div className={`flex justify-between ${classifiedFiles?.positionTexture ? 'text-green-400' : 'text-red-400'}`}>
+                  <span>Position Texture:</span>
+                  <span>{classifiedFiles?.positionTexture ? '✓' : '✗'}</span>
+                </div>
+                <div className={`flex justify-between ${classifiedFiles?.normalTexture ? 'text-green-400' : 'text-blue-400'}`}>
+                  <span>Normal Texture (optional):</span>
+                  <span>{classifiedFiles?.normalTexture ? '✓' : '○'}</span>
+                </div>
+                <div className={`flex justify-between ${classifiedFiles?.remapInfoFile ? 'text-green-400' : 'text-red-400'}`}>
+                  <span>Remap Info (.json):</span>
+                  <span>{classifiedFiles?.remapInfoFile ? '✓' : '✗'}</span>
+                </div>
+              </div>
+
+              {/* Missing Files */}
+              {fileValidation.missingFiles.length > 0 && (
+                <div className="text-red-400 text-xs">
+                  <div className="font-semibold">Missing:</div>
+                  {fileValidation.missingFiles.map((file, index) => (
+                    <div key={index}>• {file}</div>
+                  ))}
+                </div>
+              )}
+
+              {/* Errors */}
+              {fileValidation.errors.length > 0 && (
+                <div className="text-red-400 text-xs">
+                  <div className="font-semibold">Errors:</div>
+                  {fileValidation.errors.map((error, index) => (
+                    <div key={index}>• {error}</div>
+                  ))}
+                </div>
+              )}
+
+              {/* Success Message */}
+              {fileValidation.isValid && (
+                <div className="text-green-400 text-sm font-semibold text-center py-2 bg-green-400/10 rounded">
+                  All files ready! ✓
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Clear Button */}
+          {uploadedFiles.length > 0 && (
+            <button 
+              onClick={clearUploadedFiles}
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors text-sm"
+            >
+              Clear Files
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
