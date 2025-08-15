@@ -112,13 +112,8 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   const [isAnimated, setIsAnimated] = useState(true);
   const [currentFrame, setCurrentFrame] = useState(0);
   const [speed, setSpeed] = useState(24.0);
-  const [modelFile, setModelFile] = useState<File | null>(null);
-  const [positionTextureFile, setPositionTextureFile] = useState<File | null>(null);
-  const [normalTextureFile, setNormalTextureFile] = useState<File | null>(null);
-  const [remapInfoFile, setRemapInfoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [shouldLoadModel, setShouldLoadModel] = useState(false);
 
   // New state variables for multi-file upload system
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -129,10 +124,17 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   // Ref for file input element
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset shouldLoadModel when files change to prevent immediate loading
+  // New state for automatic model loading from multi-file system
+  const [shouldLoadModelFromMultiFile, setShouldLoadModelFromMultiFile] = useState(false);
+
+  // Reset multi-file loading trigger when model is successfully loaded
   useEffect(() => {
-    setShouldLoadModel(false);
-  }, [modelFile, positionTextureFile, normalTextureFile, remapInfoFile]);
+    if (shouldLoadModelFromMultiFile && classifiedFiles?.modelFile && vatTexture && vatParams) {
+      // Model has been loaded successfully, reset the trigger
+      setShouldLoadModelFromMultiFile(false);
+      console.log('Multi-file model loading completed, trigger reset');
+    }
+  }, [shouldLoadModelFromMultiFile, classifiedFiles, vatTexture, vatParams]);
 
   // Handle multi-file upload and classification
   const handleMultiFileUpload = (files: File[]) => {
@@ -162,6 +164,17 @@ const VATViewer: React.FC<VATViewerProps> = () => {
         console.log(`- ${file.name}: extension=${file.name.split('.').pop()}, isVnrm=${isVnrm}`);
       });
       
+      // If validation passes, automatically process the files
+      if (validation.isValid) {
+        console.log('Validation passed - starting automatic file processing...');
+        // Use setTimeout to ensure state updates are complete before processing
+        setTimeout(() => {
+          processMultiFileUpload(classified);
+        }, 100);
+      } else {
+        console.log('Validation failed - manual intervention required');
+      }
+      
     } catch (error) {
       console.error('Error processing files:', error);
       setFileValidation({
@@ -189,10 +202,57 @@ const VATViewer: React.FC<VATViewerProps> = () => {
     setClassifiedFiles(null);
     setFileValidation(null);
     setIsProcessingFiles(false);
+    setShouldLoadModelFromMultiFile(false);
     
     // Reset the file input element to clear the displayed file count
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // Automatic file processing function for multi-file upload system
+  const processMultiFileUpload = async (classified: ClassifiedFiles) => {
+    if (!classified.modelFile || !classified.positionTexture || !classified.remapInfoFile) {
+      console.log('Missing required files for automatic processing');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('=== Starting Automatic File Processing ===');
+      
+      // Load position texture first
+      const texture = await loadVATTextureFromFile(classified.positionTexture);
+      setVatTexture(texture);
+      console.log('Position texture loaded successfully');
+      
+      // Load normal texture if provided (optional)
+      if (classified.normalTexture) {
+        const normalTexture = await loadVATNormalTextureFromFile(classified.normalTexture);
+        setVatNormalTexture(normalTexture);
+        console.log('Normal texture loaded successfully');
+      } else {
+        console.log('No normal texture provided - using position texture only');
+      }
+      
+      // Load remap info with the loaded texture
+      await loadVATRemapInfoFromFile(classified.remapInfoFile, texture);
+      console.log('Remap info loaded successfully');
+      
+      // Signal that the model should now be loaded from the multi-file system
+      setShouldLoadModelFromMultiFile(true);
+      
+      console.log('=== Automatic File Processing Complete ===');
+      console.log('Model ready to load:', classified.modelFile.name);
+      console.log('Multi-file loading trigger set to true');
+      
+    } catch (error) {
+      console.error('Error in automatic file processing:', error);
+      setError(error instanceof Error ? error.message : 'Failed to process files automatically');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -284,39 +344,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
     });
   };
 
-  const handleLoadModel = async () => {
-    if (!modelFile || !positionTextureFile || !remapInfoFile) {
-      setError('Please select all required files');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Load position texture first
-      const texture = await loadVATTextureFromFile(positionTextureFile);
-      setVatTexture(texture);
-      
-      // Load normal texture if provided (optional)
-      if (normalTextureFile) {
-        const normalTexture = await loadVATNormalTextureFromFile(normalTextureFile);
-        setVatNormalTexture(normalTexture);
-      }
-      
-      // Load remap info with the loaded texture
-      await loadVATRemapInfoFromFile(remapInfoFile, texture);
-      
-      // Signal that the model should now be loaded
-      setShouldLoadModel(true);
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading model:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load model');
-      setLoading(false);
-    }
-  };
+  // handleLoadModel function is removed as per the edit hint
 
   return (
     <div className="w-full h-screen">
@@ -332,8 +360,8 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           isAnimated={isAnimated}
           currentFrame={currentFrame}
           speed={speed}
-          modelFile={modelFile}
-          shouldLoadModel={shouldLoadModel}
+          modelFile={classifiedFiles?.modelFile || null}
+          shouldLoadModel={shouldLoadModelFromMultiFile}
           loading={loading}
           error={error}
         />
@@ -416,165 +444,123 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           </div>
         </div>
         
-        {/* File Upload Controls */}
-        <div className="bg-black text-white p-4 rounded-lg min-w-[250px]">
-          <h4 className="text-lg font-semibold mb-3">VAT Asset Files</h4>
-          
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm mb-1">Model File:</label>
-              <input 
-                type="file" 
-                accept=".glb"
-                onChange={(e) => setModelFile(e.target.files?.[0] || null)}
-                className="w-full text-white bg-transparent border border-white/30 rounded p-1"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm mb-1">Position Texture File:</label>
-              <input 
-                type="file" 
-                accept=".exr"
-                onChange={(e) => setPositionTextureFile(e.target.files?.[0] || null)}
-                className="w-full text-white bg-transparent border border-white/30 rounded p-1"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm mb-1">Normals Texture File:</label>
-              <input 
-                type="file" 
-                accept=".exr"
-                onChange={(e) => setNormalTextureFile(e.target.files?.[0] || null)}
-                className="w-full text-white bg-transparent border border-white/30 rounded p-1"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm mb-1">Remap Info File:</label>
-              <input 
-                type="file" 
-                accept=".json"
-                onChange={(e) => setRemapInfoFile(e.target.files?.[0] || null)}
-                className="w-full text-white bg-transparent border border-white/30 rounded p-1"
-              />
-            </div>
-            
-            <button 
-              onClick={handleLoadModel}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors"
-            >
-              Load Model
-            </button>
-          </div>
-        </div>
+        {/* File Upload Controls - REMOVED */}
       </div>
       
-      {/* Info Panel */}
-      <div className="absolute top-4 left-4 z-10 bg-black/80 text-white p-4 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">OpenVAT Viewer</h3>
-        <p className="text-sm">Mouse: Rotate camera</p>
-        <p className="text-sm">Scroll: Zoom in/out</p>
-        <p className="text-sm">Right click + drag: Pan</p>
-      </div>
+      {/* Left Side Controls Container */}
+      <div className="absolute top-4 left-4 z-10 space-y-6">
+        {/* Info Panel */}
+        <div className="bg-black/80 text-white p-4 rounded-lg w-48">
+          <h3 className="text-lg font-semibold mb-2">OpenVAT Viewer</h3>
+          <p className="text-sm">Mouse: Rotate camera</p>
+          <p className="text-sm">Scroll: Zoom in/out</p>
+          <p className="text-sm">Right click + drag: Pan</p>
+        </div>
 
-      {/* Multi-File Upload Panel - Left Side */}
-      <div className="absolute top-4 left-4 z-10 mt-32 bg-black/80 text-white p-4 rounded-lg min-w-[280px]">
-        <h4 className="text-lg font-semibold mb-3">Multi-File Upload</h4>
+        {/* VAT File Upload */}
+        <div className="bg-black/80 text-white p-4 rounded-lg min-w-[280px]">
+          <h4 className="text-lg font-semibold mb-3">VAT File Upload</h4>
         
-        <div className="space-y-3">
-          {/* File Input */}
-          <div>
-            <label className="block text-sm mb-2">Select VAT Files:</label>
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              multiple
-              accept=".glb,.exr,.png,.json"
-              onChange={handleFileInputChange}
-              className="w-full text-white bg-transparent border border-white/30 rounded p-2 file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Select .glb, .exr, .png, and .json files (normal texture is optional)
-            </p>
-            
-            {/* File Count Display */}
-            <div className="text-xs text-gray-300 mt-1">
-              {uploadedFiles.length === 0 ? 'No files selected' : `${uploadedFiles.length} file${uploadedFiles.length === 1 ? '' : 's'} selected`}
-            </div>
-          </div>
-
-          {/* File Processing Status */}
-          {isProcessingFiles && (
-            <div className="text-center py-2">
-              <div className="text-blue-400">Processing files...</div>
-            </div>
-          )}
-
-          {/* File Validation Results */}
-          {fileValidation && (
-            <div className="space-y-2">
-              <h5 className="text-sm font-semibold">File Status:</h5>
+          <div className="space-y-3">
+            {/* File Input */}
+            <div>
+              <label className="block text-sm mb-2">Select VAT Files:</label>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                multiple
+                accept=".glb,.exr,.png,.json"
+                onChange={handleFileInputChange}
+                className="w-full text-white bg-transparent border border-white/30 rounded p-2 file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Select .glb, .exr, .png, and .json files (normal texture is optional)
+              </p>
               
-              {/* Required Files Status */}
-              <div className="space-y-1 text-sm">
-                <div className={`flex justify-between ${classifiedFiles?.modelFile ? 'text-green-400' : 'text-red-400'}`}>
-                  <span>Model File (.glb):</span>
-                  <span>{classifiedFiles?.modelFile ? '✓' : '✗'}</span>
-                </div>
-                <div className={`flex justify-between ${classifiedFiles?.positionTexture ? 'text-green-400' : 'text-red-400'}`}>
-                  <span>Position Texture:</span>
-                  <span>{classifiedFiles?.positionTexture ? '✓' : '✗'}</span>
-                </div>
-                <div className={`flex justify-between ${classifiedFiles?.normalTexture ? 'text-green-400' : 'text-blue-400'}`}>
-                  <span>Normal Texture (optional):</span>
-                  <span>{classifiedFiles?.normalTexture ? '✓' : '○'}</span>
-                </div>
-                <div className={`flex justify-between ${classifiedFiles?.remapInfoFile ? 'text-green-400' : 'text-red-400'}`}>
-                  <span>Remap Info (.json):</span>
-                  <span>{classifiedFiles?.remapInfoFile ? '✓' : '✗'}</span>
-                </div>
+              {/* File Count Display */}
+              <div className="text-xs text-gray-300 mt-1">
+                {uploadedFiles.length === 0 ? 'No files selected' : `${uploadedFiles.length} file${uploadedFiles.length === 1 ? '' : 's'} selected`}
               </div>
-
-              {/* Missing Files */}
-              {fileValidation.missingFiles.length > 0 && (
-                <div className="text-red-400 text-xs">
-                  <div className="font-semibold">Missing:</div>
-                  {fileValidation.missingFiles.map((file, index) => (
-                    <div key={index}>• {file}</div>
-                  ))}
-                </div>
-              )}
-
-              {/* Errors */}
-              {fileValidation.errors.length > 0 && (
-                <div className="text-red-400 text-xs">
-                  <div className="font-semibold">Errors:</div>
-                  {fileValidation.errors.map((error, index) => (
-                    <div key={index}>• {error}</div>
-                  ))}
-                </div>
-              )}
-
-              {/* Success Message */}
-              {fileValidation.isValid && (
-                <div className="text-green-400 text-sm font-semibold text-center py-2 bg-green-400/10 rounded">
-                  All files ready! ✓
-                </div>
-              )}
             </div>
-          )}
 
-          {/* Clear Button */}
-          {uploadedFiles.length > 0 && (
-            <button 
-              onClick={clearUploadedFiles}
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors text-sm"
-            >
-              Clear Files
-            </button>
-          )}
+            {/* File Processing Status */}
+            {isProcessingFiles && (
+              <div className="text-center py-2">
+                <div className="text-blue-400">Processing files...</div>
+              </div>
+            )}
+
+            {/* Automatic Processing Status */}
+            {shouldLoadModelFromMultiFile && (
+              <div className="text-center py-2">
+                <div className="text-green-400">Loading model automatically...</div>
+              </div>
+            )}
+
+            {/* File Validation Results */}
+            {fileValidation && (
+              <div className="space-y-2">
+                <h5 className="text-sm font-semibold">File Status:</h5>
+                
+                {/* Required Files Status */}
+                <div className="space-y-1 text-sm">
+                  <div className={`flex justify-between ${classifiedFiles?.modelFile ? 'text-green-400' : 'text-red-400'}`}>
+                    <span>Model File (.glb):</span>
+                    <span>{classifiedFiles?.modelFile ? '✓' : '✗'}</span>
+                  </div>
+                  <div className={`flex justify-between ${classifiedFiles?.positionTexture ? 'text-green-400' : 'text-red-400'}`}>
+                    <span>Position Texture:</span>
+                    <span>{classifiedFiles?.positionTexture ? '✓' : '✗'}</span>
+                  </div>
+                  <div className={`flex justify-between ${classifiedFiles?.normalTexture ? 'text-green-400' : 'text-blue-400'}`}>
+                    <span>Normal Texture (optional):</span>
+                    <span>{classifiedFiles?.normalTexture ? '✓' : '○'}</span>
+                  </div>
+                  <div className={`flex justify-between ${classifiedFiles?.remapInfoFile ? 'text-green-400' : 'text-red-400'}`}>
+                    <span>Remap Info (.json):</span>
+                    <span>{classifiedFiles?.remapInfoFile ? '✓' : '✗'}</span>
+                  </div>
+                </div>
+
+                {/* Missing Files */}
+                {fileValidation.missingFiles.length > 0 && (
+                  <div className="text-red-400 text-xs">
+                    <div className="font-semibold">Missing:</div>
+                    {fileValidation.missingFiles.map((file, index) => (
+                      <div key={index}>• {file}</div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Errors */}
+                {fileValidation.errors.length > 0 && (
+                  <div className="text-red-400 text-xs">
+                    <div className="font-semibold">Errors:</div>
+                    {fileValidation.errors.map((error, index) => (
+                      <div key={index}>• {error}</div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {fileValidation.isValid && (
+                  <div className="text-green-400 text-sm font-semibold text-center py-2 bg-green-400/10 rounded">
+                    {shouldLoadModelFromMultiFile ? 'Loading model automatically...' : 'All files ready! ✓'}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Clear Button */}
+            {uploadedFiles.length > 0 && (
+              <button 
+                onClick={clearUploadedFiles}
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors text-sm"
+              >
+                Clear Files
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
