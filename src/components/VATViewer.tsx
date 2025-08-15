@@ -127,6 +127,14 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   // New state for automatic model loading from multi-file system
   const [shouldLoadModelFromMultiFile, setShouldLoadModelFromMultiFile] = useState(false);
 
+  // Scene lighting properties state
+  const [ambientLightColor, setAmbientLightColor] = useState('#404040');
+  const [ambientLightIntensity, setAmbientLightIntensity] = useState(0.9);
+  const [directionalLightColor, setDirectionalLightColor] = useState('#ffffff');
+  const [directionalLightIntensity, setDirectionalLightIntensity] = useState(1.5);
+  const [pointLightColor, setPointLightColor] = useState('#ffffff');
+  const [pointLightIntensity, setPointLightIntensity] = useState(1.5);
+
   // Reset multi-file loading trigger when model is successfully loaded
   useEffect(() => {
     if (shouldLoadModelFromMultiFile && classifiedFiles?.modelFile && vatTexture && vatParams) {
@@ -368,6 +376,12 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           shouldLoadModel={shouldLoadModelFromMultiFile}
           loading={loading}
           error={error}
+          ambientLightColor={ambientLightColor}
+          ambientLightIntensity={ambientLightIntensity}
+          directionalLightColor={directionalLightColor}
+          directionalLightIntensity={directionalLightIntensity}
+          pointLightColor={pointLightColor}
+          pointLightIntensity={pointLightIntensity}
         />
       </Canvas>
       
@@ -453,8 +467,103 @@ const VATViewer: React.FC<VATViewerProps> = () => {
             )}
           </div>
         </div>
-        
-        {/* File Upload Controls - REMOVED */}
+
+        {/* Scene Controls */}
+        <div className="bg-black/80 text-white p-4 rounded-lg min-w-[250px]">
+          <h4 className="text-lg font-semibold mb-3">Scene Controls</h4>
+          
+          <div className="space-y-4">
+            {/* Ambient Light Controls */}
+            <div className="space-y-2">
+              <h5 className="text-sm font-semibold text-gray-300">Ambient Light</h5>
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-sm mb-1">Color:</label>
+                  <input 
+                    type="color" 
+                    value={ambientLightColor}
+                    onChange={(e) => setAmbientLightColor(e.target.value)}
+                    className="w-full h-8 rounded border border-white/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">
+                    Intensity: <span>{ambientLightIntensity.toFixed(2)}</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min={0.0} 
+                    max={10.0} 
+                    step={0.01} 
+                    value={ambientLightIntensity}
+                    onChange={(e) => setAmbientLightIntensity(parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Directional Light Controls */}
+            <div className="space-y-2">
+              <h5 className="text-sm font-semibold text-gray-300">Directional Light</h5>
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-sm mb-1">Color:</label>
+                  <input 
+                    type="color" 
+                    value={directionalLightColor}
+                    onChange={(e) => setDirectionalLightColor(e.target.value)}
+                    className="w-full h-8 rounded border border-white/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">
+                    Intensity: <span>{directionalLightIntensity.toFixed(2)}</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min={0.0} 
+                    max={10.0} 
+                    step={0.01} 
+                    value={directionalLightIntensity}
+                    onChange={(e) => setDirectionalLightIntensity(parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Point Light Controls */}
+            <div className="space-y-2">
+              <h5 className="text-sm font-semibold text-gray-300">Point Light</h5>
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-sm mb-1">Color:</label>
+                  <input 
+                    type="color" 
+                    value={pointLightColor}
+                    onChange={(e) => setPointLightColor(e.target.value)}
+                    className="w-full h-8 rounded border border-white/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">
+                    Intensity: <span>{pointLightIntensity.toFixed(2)}</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min={0.0} 
+                    max={10.0} 
+                    step={0.01} 
+                    value={pointLightIntensity}
+                    onChange={(e) => setPointLightIntensity(parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Left Side Controls Container */}

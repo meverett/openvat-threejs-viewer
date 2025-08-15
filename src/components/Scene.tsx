@@ -25,6 +25,12 @@ interface SceneProps {
   shouldLoadModel: boolean;
   loading: boolean;
   error: string | null;
+  ambientLightColor: string;
+  ambientLightIntensity: number;
+  directionalLightColor: string;
+  directionalLightIntensity: number;
+  pointLightColor: string;
+  pointLightIntensity: number;
 }
 
 const Scene: React.FC<SceneProps> = ({
@@ -37,7 +43,13 @@ const Scene: React.FC<SceneProps> = ({
   modelFile,
   shouldLoadModel,
   loading,
-  error
+  error,
+  ambientLightColor,
+  ambientLightIntensity,
+  directionalLightColor,
+  directionalLightIntensity,
+  pointLightColor,
+  pointLightIntensity
 }) => {
   const { scene, camera, gl } = useThree();
   const [model, setModel] = useState<THREE.Object3D | null>(null);
@@ -59,11 +71,11 @@ const Scene: React.FC<SceneProps> = ({
   // Setup lights
   useEffect(() => {
     // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.9);
+    const ambientLight = new THREE.AmbientLight(ambientLightColor, ambientLightIntensity);
     scene.add(ambientLight);
     
     // Directional light
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    const directionalLight = new THREE.DirectionalLight(directionalLightColor, directionalLightIntensity);
     directionalLight.position.set(10, 10, 5);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -71,7 +83,7 @@ const Scene: React.FC<SceneProps> = ({
     scene.add(directionalLight);
     
     // Point light
-    const pointLight = new THREE.PointLight(0xffffff, 1.5);
+    const pointLight = new THREE.PointLight(pointLightColor, pointLightIntensity, 60, 0.5);
     pointLight.position.set(-10, 10, -10);
     scene.add(pointLight);
 
@@ -85,7 +97,7 @@ const Scene: React.FC<SceneProps> = ({
       scene.remove(pointLight);
       scene.remove(gridHelper);
     };
-  }, [scene]);
+  }, [scene, ambientLightColor, ambientLightIntensity, directionalLightColor, directionalLightIntensity, pointLightColor, pointLightIntensity]);
 
   // Handle model loading
   useEffect(() => {
