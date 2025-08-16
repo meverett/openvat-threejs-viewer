@@ -39,16 +39,10 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
         // Initialize with inherited + custom parameters
         super(inheritedParams);
 
-        // Add custom uniforms
+        // Add custom VAT uniforms
         this.uniforms = {
-            // Lighting uniforms
-            lightPosition: { value: new THREE.Vector3(10, 10, 5) },
-            lightColor: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
-            ambientColor: { value: new THREE.Vector3(0.2, 0.2, 0.2) },
-            diffuseColor: { value: new THREE.Vector3(0.8, 0.8, 0.8) },
-            time: { value: 0.0 },
             
-            // VAT (Vertex Animation Texture) uniforms
+            time: { value: 0.0 },
             vat_position_texture: { value: null },
             vat_normal_texture: { value: null },
             minValues: { value: new THREE.Vector3(-1.0, -1.0, -1.0) },
@@ -58,9 +52,6 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
             ToggleAnimated: { value: true },
             frameSelect: { value: 0 },
             Speed: { value: 24.0 },
-            
-            // PBR Material uniforms
-            specular: { value: 1.0 }
         };
 
         // Define shader additions
@@ -124,15 +115,15 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
             // Apply the remapped position to the vertex
             transformed += object_space_position;
 
-            // Sample the VAT normal texture and unpack the normals using UV2
-            vec3 VAT_normal = texture(vat_normal_texture, VAT_UV_offset).rgb;
-            vec3 VAT_normal_next = texture(vat_normal_texture, VAT_UV_offset_next).rgb;
-            VAT_normal = 2.0 * VAT_normal - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
-            VAT_normal_next = 2.0 * VAT_normal_next - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
-            VAT_normal.r = -VAT_normal.r; // Flip the R channel
+            // // Sample the VAT normal texture and unpack the normals using UV2
+            // vec3 VAT_normal = texture(vat_normal_texture, VAT_UV_offset).rgb;
+            // vec3 VAT_normal_next = texture(vat_normal_texture, VAT_UV_offset_next).rgb;
+            // VAT_normal = 2.0 * VAT_normal - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
+            // VAT_normal_next = 2.0 * VAT_normal_next - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
+            // VAT_normal.r = -VAT_normal.r; // Flip the R channel
 
-            // Pass the unpacked normals to the fragment shader
-            v_vat_normal = normalize(mix(VAT_normal,VAT_normal_next, blend));
+            // // Pass the unpacked normals to the fragment shader
+            // v_vat_normal = normalize(mix(VAT_normal,VAT_normal_next, blend));
             `
         };
     }

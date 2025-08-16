@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshStandardOpenVATMaterial } from '../threejs/materials/MeshStandardMaterialOpenVAT.js';
@@ -12,6 +13,7 @@ interface VATParams {
   maxValues: THREE.Vector3;
   FrameCount: number;
   Y_resolution: number;
+  Position?: THREE.Vector3 | null;
 }
 
 interface SceneProps {
@@ -59,7 +61,7 @@ const Scene: React.FC<SceneProps> = ({
 
   // Setup scene background
   useEffect(() => {
-    scene.background = new THREE.Color(0x1a1a1a);
+    scene.background = new THREE.Color(0x000000);
     
     // DEBUG: Test Possibility 4 - Three.js Version Differences
     console.log('=== DEBUG: Three.js Version Differences ===');
@@ -108,9 +110,6 @@ const Scene: React.FC<SceneProps> = ({
 
   const loadModel = async () => {
     if (!modelFile || !vatTexture || !vatParams) return;
-
-    // setLoading(true); // Removed local loading state
-    // setError(null); // Removed local error state
 
     try {
       // Clean up existing model
@@ -278,9 +277,6 @@ const Scene: React.FC<SceneProps> = ({
 
     } catch (err) {
       console.error('Error loading model:', err);
-      // setError(err instanceof Error ? err.message : 'Failed to load model'); // Removed local error state
-    } finally {
-      // setLoading(false); // Removed local loading state
     }
   };
 
@@ -329,7 +325,7 @@ const Scene: React.FC<SceneProps> = ({
         dampingFactor={0.05}
         screenSpacePanning={false}
         minDistance={1}
-        maxDistance={50}
+        maxDistance={150}
         maxPolarAngle={Math.PI}
       />
     </>

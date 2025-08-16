@@ -402,285 +402,287 @@ const VATViewer: React.FC<VATViewerProps> = () => {
         </div>
       )}
       
+
+      
       {/* Controls Overlay */}
       <div className="absolute top-4 right-4 z-10 space-y-4">
-        {/* VAT Controls */}
-        <div className="bg-black/80 text-white p-4 rounded-lg min-w-[250px]">
-          <h4 className="text-lg font-semibold mb-3">VAT Controls</h4>
-          
-          <div className="space-y-2 mb-3 p-2 bg-white/10 rounded">
-            <div className="text-sm">Position Texture: <span className="text-green-400">Loaded ✓</span></div>
-            <div className="text-sm">Normal Texture: <span className="text-green-400">Loaded ✓</span></div>
-            <div className="text-sm">Dimensions: <span>{vatTexture?.image ? `${vatTexture.image.width} × ${vatTexture.image.height}` : '-'}</span></div>
-          </div>
-          
-          {vatParams && (
+          {/* VAT Controls */}
+          <div className="bg-black/80 text-white p-4 rounded-lg min-w-[250px]">
+            <h4 className="text-lg font-semibold mb-3">VAT Controls</h4>
+            
             <div className="space-y-2 mb-3 p-2 bg-white/10 rounded">
-              <div className="text-sm">Min Values: <span>({vatParams.minValues.x.toFixed(2)}, {vatParams.minValues.y.toFixed(2)}, {vatParams.minValues.z.toFixed(2)})</span></div>
-              <div className="text-sm">Max Values: <span>({vatParams.maxValues.x.toFixed(2)}, {vatParams.maxValues.y.toFixed(2)}, {vatParams.maxValues.z.toFixed(2)})</span></div>
-              <div className="text-sm">Frame Count: <span>{vatParams.FrameCount}</span></div>
-              <div className="text-sm">Y Resolution: <span>{vatParams.Y_resolution}</span></div>
+              <div className="text-sm">Position Texture: <span className="text-green-400">Loaded ✓</span></div>
+              <div className="text-sm">Normal Texture: <span className="text-green-400">Loaded ✓</span></div>
+              <div className="text-sm">Dimensions: <span>{vatTexture?.image ? `${vatTexture.image.width} × ${vatTexture.image.height}` : '-'}</span></div>
             </div>
-          )}
-          
-          <div className="space-y-3">
-            <label className="flex items-center space-x-2 text-sm">
-              <input 
-                type="checkbox" 
-                checked={isAnimated}
-                onChange={(e) => setIsAnimated(e.target.checked)}
-                className="rounded"
-              />
-              <span>Animated</span>
-            </label>
             
-            {/* Frame Slider - Only visible when NOT animated */}
-            {!isAnimated && (
-              <div>
-                <label className="block text-sm mb-1">
-                  Frame: <span>{currentFrame + 1}</span>
-                </label>
-                <input 
-                  type="range" 
-                  min={0} 
-                  max={vatParams?.FrameCount ? vatParams.FrameCount - 1 : 59} 
-                  value={currentFrame}
-                  onChange={(e) => setCurrentFrame(parseInt(e.target.value))}
-                  className="w-full"
-                />
+            {vatParams && (
+              <div className="space-y-2 mb-3 p-2 bg-white/10 rounded">
+                <div className="text-sm">Min Values: <span>({vatParams.minValues.x.toFixed(2)}, {vatParams.minValues.y.toFixed(2)}, {vatParams.minValues.z.toFixed(2)})</span></div>
+                <div className="text-sm">Max Values: <span>({vatParams.maxValues.x.toFixed(2)}, {vatParams.maxValues.y.toFixed(2)}, {vatParams.maxValues.z.toFixed(2)})</span></div>
+                <div className="text-sm">Frame Count: <span>{vatParams.FrameCount}</span></div>
+                <div className="text-sm">Y Resolution: <span>{vatParams.Y_resolution}</span></div>
               </div>
             )}
             
-            {/* Speed Slider - Only visible when animated */}
-            {isAnimated && (
-              <div>
-                <label className="block text-sm mb-1">
-                  Speed: <span>{speed.toFixed(1)}</span>
-                </label>
+            <div className="space-y-3">
+              <label className="flex items-center space-x-2 text-sm">
                 <input 
-                  type="range" 
-                  min={0.1} 
-                  max={60.0} 
-                  step={0.1} 
-                  value={speed}
-                  onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                  className="w-full"
+                  type="checkbox" 
+                  checked={isAnimated}
+                  onChange={(e) => setIsAnimated(e.target.checked)}
+                  className="rounded"
                 />
-              </div>
-            )}
+                <span>Animated</span>
+              </label>
+              
+              {/* Frame Slider - Only visible when NOT animated */}
+              {!isAnimated && (
+                <div>
+                  <label className="block text-sm mb-1">
+                    Frame: <span>{currentFrame + 1}</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min={0} 
+                    max={vatParams?.FrameCount ? vatParams.FrameCount - 1 : 59} 
+                    value={currentFrame}
+                    onChange={(e) => setCurrentFrame(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              )}
+              
+              {/* Speed Slider - Only visible when animated */}
+              {isAnimated && (
+                <div>
+                  <label className="block text-sm mb-1">
+                    Speed: <span>{speed.toFixed(1)}</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min={0.1} 
+                    max={60.0} 
+                    step={0.1} 
+                    value={speed}
+                    onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
           </div>
+
+              {/* Scene Controls */}
+              <div className="bg-black text-white p-4 rounded-lg min-w-[250px]">
+                {/* Ambient Light Controls */}
+                <div className="space-y-2">
+                  <h5 className="text-sm font-semibold text-gray-300">Ambient Light</h5>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                      <label className="block text-sm mb-1">Color:</label>
+                      <input 
+                        type="color" 
+                        value={ambientLightColor}
+                        onChange={(e) => setAmbientLightColor(e.target.value)}
+                        className="w-16 h-8 rounded border border-white/30"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm mb-1">
+                        Intensity: <span>{ambientLightIntensity.toFixed(2)}</span>
+                      </label>
+                      <input 
+                        type="range" 
+                        min={0.0} 
+                        max={10.0} 
+                        step={0.01} 
+                        value={ambientLightIntensity}
+                        onChange={(e) => setAmbientLightIntensity(parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Directional Light Controls */}
+                <div className="space-y-2">
+                  <h5 className="text-sm font-semibold text-gray-300">Directional Light</h5>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                      <label className="block text-sm mb-1">Color:</label>
+                      <input 
+                        type="color" 
+                        value={directionalLightColor}
+                        onChange={(e) => setDirectionalLightColor(e.target.value)}
+                        className="w-16 h-8 rounded border border-white/30"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm mb-1">
+                        Intensity: <span>{directionalLightIntensity.toFixed(2)}</span>
+                      </label>
+                      <input 
+                        type="range" 
+                        min={0.0} 
+                        max={10.0} 
+                        step={0.01} 
+                        value={directionalLightIntensity}
+                        onChange={(e) => setDirectionalLightIntensity(parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Point Light Controls */}
+                <div className="space-y-2">
+                  <h5 className="text-sm font-semibold text-gray-300">Point Light</h5>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                      <label className="block text-sm mb-1">Color:</label>
+                      <input 
+                        type="color" 
+                        value={pointLightColor}
+                        onChange={(e) => setPointLightColor(e.target.value)}
+                        className="w-16 h-8 rounded border border-white/30"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm mb-1">
+                        Intensity: <span>{pointLightIntensity.toFixed(2)}</span>
+                      </label>
+                      <input 
+                        type="range" 
+                        min={0.0} 
+                        max={10.0} 
+                        step={0.01} 
+                        value={pointLightIntensity}
+                        onChange={(e) => setPointLightIntensity(parseFloat(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
         </div>
-
-            {/* Scene Controls */}
-            <div className="bg-black text-white p-4 rounded-lg min-w-[250px]">
-              {/* Ambient Light Controls */}
-              <div className="space-y-2">
-                <h5 className="text-sm font-semibold text-gray-300">Ambient Light</h5>
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <label className="block text-sm mb-1">Color:</label>
-                    <input 
-                      type="color" 
-                      value={ambientLightColor}
-                      onChange={(e) => setAmbientLightColor(e.target.value)}
-                      className="w-16 h-8 rounded border border-white/30"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1">
-                      Intensity: <span>{ambientLightIntensity.toFixed(2)}</span>
-                    </label>
-                    <input 
-                      type="range" 
-                      min={0.0} 
-                      max={10.0} 
-                      step={0.01} 
-                      value={ambientLightIntensity}
-                      onChange={(e) => setAmbientLightIntensity(parseFloat(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Directional Light Controls */}
-              <div className="space-y-2">
-                <h5 className="text-sm font-semibold text-gray-300">Directional Light</h5>
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <label className="block text-sm mb-1">Color:</label>
-                    <input 
-                      type="color" 
-                      value={directionalLightColor}
-                      onChange={(e) => setDirectionalLightColor(e.target.value)}
-                      className="w-16 h-8 rounded border border-white/30"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1">
-                      Intensity: <span>{directionalLightIntensity.toFixed(2)}</span>
-                    </label>
-                    <input 
-                      type="range" 
-                      min={0.0} 
-                      max={10.0} 
-                      step={0.01} 
-                      value={directionalLightIntensity}
-                      onChange={(e) => setDirectionalLightIntensity(parseFloat(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Point Light Controls */}
-              <div className="space-y-2">
-                <h5 className="text-sm font-semibold text-gray-300">Point Light</h5>
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <label className="block text-sm mb-1">Color:</label>
-                    <input 
-                      type="color" 
-                      value={pointLightColor}
-                      onChange={(e) => setPointLightColor(e.target.value)}
-                      className="w-16 h-8 rounded border border-white/30"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm mb-1">
-                      Intensity: <span>{pointLightIntensity.toFixed(2)}</span>
-                    </label>
-                    <input 
-                      type="range" 
-                      min={0.0} 
-                      max={10.0} 
-                      step={0.01} 
-                      value={pointLightIntensity}
-                      onChange={(e) => setPointLightIntensity(parseFloat(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-      </div>
       
       {/* Left Side Controls Container */}
       <div className="absolute top-4 left-4 z-10 space-y-6">
-        {/* Info Panel */}
-        <div className="bg-black/80 text-white p-4 rounded-lg w-48">
-          <h3 className="text-lg font-semibold mb-2">OpenVAT Viewer</h3>
-          <p className="text-sm">Mouse: Rotate camera</p>
-          <p className="text-sm">Scroll: Zoom in/out</p>
-          <p className="text-sm">Right click + drag: Pan</p>
-        </div>
+          {/* Info Panel */}
+          <div className="bg-black/80 text-white p-4 rounded-lg w-48">
+            <h3 className="text-lg font-semibold mb-2">OpenVAT Viewer</h3>
+            <p className="text-sm">Mouse: Rotate camera</p>
+            <p className="text-sm">Scroll: Zoom in/out</p>
+            <p className="text-sm">Right click + drag: Pan</p>
+          </div>
 
-        {/* VAT File Upload */}
-        <div className="bg-black/80 text-white p-4 rounded-lg min-w-[280px]">
-          <h4 className="text-lg font-semibold mb-3">VAT File Upload</h4>
-        
-          <div className="space-y-3">
-            {/* File Input */}
-            <div>
-              <label className="block text-sm mb-2">Select VAT Files:</label>
-              <input 
-                ref={fileInputRef}
-                type="file" 
-                multiple
-                accept=".glb,.exr,.png,.json"
-                onChange={handleFileInputChange}
-                className="w-full text-white bg-transparent border border-white/30 rounded p-2 file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Select .glb, .exr, .png, and .json files (normal texture is optional)
-              </p>
-              
-              {/* File Count Display */}
-              <div className="text-xs text-gray-300 mt-1">
-                {uploadedFiles.length === 0 ? 'No files selected' : `${uploadedFiles.length} file${uploadedFiles.length === 1 ? '' : 's'} selected`}
-              </div>
-            </div>
-
-            {/* File Processing Status */}
-            {isProcessingFiles && (
-              <div className="text-center py-2">
-                <div className="text-blue-400">Processing files...</div>
-              </div>
-            )}
-
-            {/* Automatic Processing Status */}
-            {shouldLoadModelFromMultiFile && (
-              <div className="text-center py-2">
-                <div className="text-green-400">Loading model automatically...</div>
-              </div>
-            )}
-
-            {/* File Validation Results */}
-            {fileValidation && (
-              <div className="space-y-2">
-                <h5 className="text-sm font-semibold">File Status:</h5>
+          {/* VAT File Upload */}
+          <div className="bg-black/80 text-white p-4 rounded-lg min-w-[280px]">
+            <h4 className="text-lg font-semibold mb-3">VAT File Upload</h4>
+          
+            <div className="space-y-3">
+              {/* File Input */}
+              <div>
+                <label className="block text-sm mb-2">Select VAT Files:</label>
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  multiple
+                  accept=".glb,.exr,.png,.json"
+                  onChange={handleFileInputChange}
+                  className="w-full text-white bg-transparent border border-white/30 rounded p-2 file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Select .glb, .exr, .png, and .json files (normal texture is optional)
+                </p>
                 
-                {/* Required Files Status */}
-                <div className="space-y-1 text-sm">
-                  <div className={`flex justify-between ${classifiedFiles?.modelFile ? 'text-green-400' : 'text-red-400'}`}>
-                    <span>Model File (.glb):</span>
-                    <span>{classifiedFiles?.modelFile ? '✓' : '✗'}</span>
-                  </div>
-                  <div className={`flex justify-between ${classifiedFiles?.positionTexture ? 'text-green-400' : 'text-red-400'}`}>
-                    <span>Position Texture:</span>
-                    <span>{classifiedFiles?.positionTexture ? '✓' : '✗'}</span>
-                  </div>
-                  <div className={`flex justify-between ${classifiedFiles?.normalTexture ? 'text-green-400' : 'text-blue-400'}`}>
-                    <span>Normal Texture (optional):</span>
-                    <span>{classifiedFiles?.normalTexture ? '✓' : '○'}</span>
-                  </div>
-                  <div className={`flex justify-between ${classifiedFiles?.remapInfoFile ? 'text-green-400' : 'text-red-400'}`}>
-                    <span>Remap Info (.json):</span>
-                    <span>{classifiedFiles?.remapInfoFile ? '✓' : '✗'}</span>
-                  </div>
+                {/* File Count Display */}
+                <div className="text-xs text-gray-300 mt-1">
+                  {uploadedFiles.length === 0 ? 'No files selected' : `${uploadedFiles.length} file${uploadedFiles.length === 1 ? '' : 's'} selected`}
                 </div>
-
-                {/* Missing Files */}
-                {fileValidation.missingFiles.length > 0 && (
-                  <div className="text-red-400 text-xs">
-                    <div className="font-semibold">Missing:</div>
-                    {fileValidation.missingFiles.map((file, index) => (
-                      <div key={index}>• {file}</div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Errors */}
-                {fileValidation.errors.length > 0 && (
-                  <div className="text-red-400 text-xs">
-                    <div className="font-semibold">Errors:</div>
-                    {fileValidation.errors.map((error, index) => (
-                      <div key={index}>• {error}</div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Success Message */}
-                {fileValidation.isValid && (
-                  <div className="text-green-400 text-sm font-semibold text-center py-2 bg-green-400/10 rounded">
-                    {shouldLoadModelFromMultiFile ? 'Loading model automatically...' : 'All files ready! ✓'}
-                  </div>
-                )}
               </div>
-            )}
 
-            {/* Clear Button */}
-            {uploadedFiles.length > 0 && (
-              <button 
-                onClick={clearUploadedFiles}
-                className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors text-sm"
-              >
-                Clear Files
-              </button>
-            )}
+              {/* File Processing Status */}
+              {isProcessingFiles && (
+                <div className="text-center py-2">
+                  <div className="text-blue-400">Processing files...</div>
+                </div>
+              )}
+
+              {/* Automatic Processing Status */}
+              {shouldLoadModelFromMultiFile && (
+                <div className="text-center py-2">
+                  <div className="text-green-400">Loading model automatically...</div>
+                </div>
+              )}
+
+              {/* File Validation Results */}
+              {fileValidation && (
+                <div className="space-y-2">
+                  <h5 className="text-sm font-semibold">File Status:</h5>
+                  
+                  {/* Required Files Status */}
+                  <div className="space-y-1 text-sm">
+                    <div className={`flex justify-between ${classifiedFiles?.modelFile ? 'text-green-400' : 'text-red-400'}`}>
+                      <span>Model File (.glb):</span>
+                      <span>{classifiedFiles?.modelFile ? '✓' : '✗'}</span>
+                    </div>
+                    <div className={`flex justify-between ${classifiedFiles?.positionTexture ? 'text-green-400' : 'text-red-400'}`}>
+                      <span>Position Texture:</span>
+                      <span>{classifiedFiles?.positionTexture ? '✓' : '✗'}</span>
+                    </div>
+                    <div className={`flex justify-between ${classifiedFiles?.normalTexture ? 'text-green-400' : 'text-blue-400'}`}>
+                      <span>Normal Texture (optional):</span>
+                      <span>{classifiedFiles?.normalTexture ? '✓' : '○'}</span>
+                    </div>
+                    <div className={`flex justify-between ${classifiedFiles?.remapInfoFile ? 'text-green-400' : 'text-red-400'}`}>
+                      <span>Remap Info (.json):</span>
+                      <span>{classifiedFiles?.remapInfoFile ? '✓' : '✗'}</span>
+                    </div>
+                  </div>
+
+                  {/* Missing Files */}
+                  {fileValidation.missingFiles.length > 0 && (
+                    <div className="text-red-400 text-xs">
+                      <div className="font-semibold">Missing:</div>
+                      {fileValidation.missingFiles.map((file, index) => (
+                        <div key={index}>• {file}</div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Errors */}
+                  {fileValidation.errors.length > 0 && (
+                    <div className="text-red-400 text-xs">
+                      <div className="font-semibold">Errors:</div>
+                      {fileValidation.errors.map((error, index) => (
+                        <div key={index}>• {error}</div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Success Message */}
+                  {fileValidation.isValid && (
+                    <div className="text-green-400 text-sm font-semibold text-center py-2 bg-green-400/10 rounded">
+                      {shouldLoadModelFromMultiFile ? 'Loading model automatically...' : 'All files ready! ✓'}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Clear Button */}
+              {uploadedFiles.length > 0 && (
+                <button 
+                  onClick={clearUploadedFiles}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors text-sm"
+                >
+                  Clear Files
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };
