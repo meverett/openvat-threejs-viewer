@@ -11,6 +11,7 @@ interface VATParams {
   maxValues: THREE.Vector3;
   FrameCount: number;
   Y_resolution: number;
+  Position: THREE.Vector3 | null;
 }
 
 // New interfaces for file classification
@@ -323,6 +324,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
       reader.onload = (event) => {
         try {
           const remapInfo = JSON.parse(event.target?.result as string);
+          const osRemap = remapInfo['os-remap'] ?? null;
           
           let yResolution = 512.0;
           if (texture && texture.image) {
@@ -334,16 +336,17 @@ const VATViewer: React.FC<VATViewerProps> = () => {
 
           setVatParams({
             Y_resolution: yResolution,
-            FrameCount: remapInfo['os-remap']?.Frames ?? 60,
+            FrameCount: osRemap?.Frames ?? 60,
+            Position: osRemap?.Position ? new THREE.Vector3(osRemap.Position[0], osRemap.Position[1], osRemap.Position[2]) : null,
             minValues: new THREE.Vector3(
-              remapInfo['os-remap']?.Min?.[0] ?? -1.0,
-              remapInfo['os-remap']?.Min?.[1] ?? -1.0,
-              remapInfo['os-remap']?.Min?.[2] ?? -1.0
+              osRemap?.Min?.[0] ?? -1.0,
+              osRemap?.Min?.[1] ?? -1.0,
+              osRemap?.Min?.[2] ?? -1.0
             ),
             maxValues: new THREE.Vector3(
-              remapInfo['os-remap']?.Max?.[0] ?? 1.0,
-              remapInfo['os-remap']?.Max?.[1] ?? 1.0,
-              remapInfo['os-remap']?.Max?.[2] ?? 1.0
+              osRemap?.Max?.[0] ?? 1.0,
+              osRemap?.Max?.[1] ?? 1.0,
+              osRemap?.Max?.[2] ?? 1.0
             )
           });
           resolve();

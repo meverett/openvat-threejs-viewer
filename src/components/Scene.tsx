@@ -192,19 +192,7 @@ const Scene: React.FC<SceneProps> = ({
       
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = 1 / maxDim;
-      loadedModel.scale.setScalar(scale);
-      
-      // DEBUG: Model Scaling Information
-      console.log('=== DEBUG: Model Scaling ===');
-      console.log('Original model bounds:', { min: box.min, max: box.max });
-      console.log('Model size:', size);
-      console.log('Applied scale:', scale);
-      console.log('Final model bounds after scaling:', {
-        min: box.min.clone().multiplyScalar(scale),
-        max: box.max.clone().multiplyScalar(scale)
-      });
-      
+
       // DEBUG: Test Possibility 3 - Material Application Timing
       console.log('=== DEBUG: Material Application Timing ===');
       console.log('About to apply VAT materials...');
@@ -245,8 +233,6 @@ const Scene: React.FC<SceneProps> = ({
           }
           if (vatParams && vatMaterial.uniforms) {
             // DEBUG: VAT Parameters
-            console.log('=== DEBUG: VAT Parameters ===');
-            console.log('VAT Params loaded:', vatParams);
             console.log('Setting uniforms:', {
               minValues: vatParams.minValues,
               maxValues: vatParams.maxValues,
@@ -266,9 +252,14 @@ const Scene: React.FC<SceneProps> = ({
               FrameCount: vatMaterial.uniforms.FrameCount.value,
               Y_resolution: vatMaterial.uniforms.Y_resolution.value
             });
+
+            // If Position exists on the params, apply it to the mesh
+            if (vatParams.Position) {
+              mesh.position.set(vatParams.Position.x, vatParams.Position.y, vatParams.Position.z);
+            }
           }
 
-          mesh.castShadow = true;
+          mesh.castShadow = false;
           mesh.receiveShadow = false;
         }
       });
@@ -288,86 +279,12 @@ const Scene: React.FC<SceneProps> = ({
     } catch (err) {
       console.error('Error loading model:', err);
       // setError(err instanceof Error ? err.message : 'Failed to load model'); // Removed local error state
-      
-      // Add placeholder cube
-      addPlaceholderCube();
     } finally {
       // setLoading(false); // Removed local loading state
     }
   };
 
-  const addPlaceholderCube = () => {
-    const geometry = new THREE.BoxGeometry(2, 2, 2);
-    ensureUVCoordinates(geometry);
-    
-    const material = new MeshStandardOpenVATMaterial();
-    if (vatTexture) material.uniforms.vat_position_texture.value = vatTexture;
-    if (vatNormalTexture) material.uniforms.vat_normal_texture.value = vatNormalTexture;
-    if (vatParams) {
-      material.uniforms.minValues.value = vatParams.minValues;
-      material.uniforms.maxValues.value = vatParams.maxValues;
-      material.uniforms.FrameCount.value = vatParams.FrameCount;
-      material.uniforms.Y_resolution.value = vatParams.Y_resolution;
-    }
-
-    const cube = new THREE.Mesh(geometry, material);
-    cube.castShadow = true;
-    cube.receiveShadow = true;
-    scene.add(cube);
-    setModel(cube);
-    modelRef.current = cube;
-  };
-
   const ensureUVCoordinates = (geometry: THREE.BufferGeometry) => {
-    // Check if geometry already has UV coordinates
-    if (!geometry.attributes.uv) {
-      console.log('No uv coordinates found, generating default uvs');
-            
-      // Generate default UV coordinates
-      const uvs = [];
-      const positions = geometry.attributes.position;
-
-      for (let i = 0; i < positions.count; i++) {
-          const x = positions.getX(i);
-          const y = positions.getY(i);
-          const z = positions.getZ(i);
-          
-          // Generate UVs based on position (simple mapping)
-          const u = (x + 1.0) * 0.5; // Map X from [-1,1] to [0,1]
-          const v = (y + 1.0) * 0.5; // Map Y from [-1,1] to [0,1]
-          
-          uvs.push(u, v);
-      }
-
-      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    }
-    
-    // Ensure we have UV1
-    if (!geometry.attributes.uv1) {
-      console.log('No uv1 coordinates found, copying from uv');
-      if (geometry.attributes.uv) {
-          geometry.setAttribute('uv1', geometry.attributes.uv.clone());
-      } else {
-          // Generate UV2 if no UV1 either
-          const uvs = [];
-          const positions = geometry.attributes.position;
-          
-          for (let i = 0; i < positions.count; i++) {
-              const x = positions.getX(i);
-              const y = positions.getY(i);
-              const z = positions.getZ(i);
-              
-              // Generate UV2s based on position (different mapping)
-              const u = (z + 1.0) * 0.5; // Map Z from [-1,1] to [0,1]
-              const v = (x + 1.0) * 0.5; // Map X from [-1,1] to [0,1]
-              
-              uvs.push(u, v);
-          }
-          
-          geometry.setAttribute('uv1', new THREE.Float32BufferAttribute(uvs, 2));
-      }
-    }
-
     console.log('UV coordinates ensured:', {
       uv: geometry.attributes.uv ? 'present' : 'missing',
       uv1: geometry.attributes.uv1 ? 'present' : 'missing'

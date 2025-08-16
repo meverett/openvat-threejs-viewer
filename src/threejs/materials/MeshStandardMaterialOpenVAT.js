@@ -36,8 +36,6 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
             inheritedParams.displacementBias = originalMaterial.displacementBias;
         }
     
-        console.log(inheritedParams);
-
         // Initialize with inherited + custom parameters
         super(inheritedParams);
 
@@ -105,8 +103,8 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
 
             // Calculate the UV offset for the current frame
             float frameStep = 1.0 / Y_resolution;
-            vec2 VAT_UV_offset = uv1 + vec2(0.0, float(currentFrame) * frameStep);
-            vec2 VAT_UV_offset_next = uv1 + vec2(0.0, float(nextFrame) * frameStep);
+            vec2 VAT_UV_offset = uv1 + vec2(0.0, 1.0 - float(currentFrame) * frameStep);
+            vec2 VAT_UV_offset_next = uv1 + vec2(0.0, 1.0 - float(nextFrame) * frameStep);
 
             // Pass the UV offset to the fragment shader
             v_vat_uv_offset = VAT_UV_offset;
