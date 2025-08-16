@@ -129,12 +129,16 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   const [shouldLoadModelFromMultiFile, setShouldLoadModelFromMultiFile] = useState(false);
 
   // Scene lighting properties state
+  const [sceneBackgroundColor, setSceneBackgroundColor] = useState('#000000');
   const [ambientLightColor, setAmbientLightColor] = useState('#404040');
   const [ambientLightIntensity, setAmbientLightIntensity] = useState(0.9);
   const [directionalLightColor, setDirectionalLightColor] = useState('#ffffff');
   const [directionalLightIntensity, setDirectionalLightIntensity] = useState(1.5);
   const [pointLightColor, setPointLightColor] = useState('#ffffff');
   const [pointLightIntensity, setPointLightIntensity] = useState(1.5);
+
+  // VAT Details overlay state
+  const [showVATDetails, setShowVATDetails] = useState(false);
 
   // Reset multi-file loading trigger when model is successfully loaded
   useEffect(() => {
@@ -220,6 +224,18 @@ const VATViewer: React.FC<VATViewerProps> = () => {
     // Reset the file input element to clear the displayed file count
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle VAT Details overlay close
+  const handleVATDetailsClose = () => {
+    setShowVATDetails(false);
+  };
+
+  // Handle clicking outside the VAT Details overlay
+  const handleOverlayBackgroundClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setShowVATDetails(false);
     }
   };
 
@@ -379,6 +395,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           shouldLoadModel={shouldLoadModelFromMultiFile}
           loading={loading}
           error={error}
+          sceneBackgroundColor={sceneBackgroundColor}
           ambientLightColor={ambientLightColor}
           ambientLightIntensity={ambientLightIntensity}
           directionalLightColor={directionalLightColor}
@@ -409,21 +426,6 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           {/* VAT Controls */}
           <div className="bg-black/80 text-white p-4 rounded-lg min-w-[250px]">
             <h4 className="text-lg font-semibold mb-3">VAT Controls</h4>
-            
-            <div className="space-y-2 mb-3 p-2 bg-white/10 rounded">
-              <div className="text-sm">Position Texture: <span className="text-green-400">Loaded ✓</span></div>
-              <div className="text-sm">Normal Texture: <span className="text-green-400">Loaded ✓</span></div>
-              <div className="text-sm">Dimensions: <span>{vatTexture?.image ? `${vatTexture.image.width} × ${vatTexture.image.height}` : '-'}</span></div>
-            </div>
-            
-            {vatParams && (
-              <div className="space-y-2 mb-3 p-2 bg-white/10 rounded">
-                <div className="text-sm">Min Values: <span>({vatParams.minValues.x.toFixed(2)}, {vatParams.minValues.y.toFixed(2)}, {vatParams.minValues.z.toFixed(2)})</span></div>
-                <div className="text-sm">Max Values: <span>({vatParams.maxValues.x.toFixed(2)}, {vatParams.maxValues.y.toFixed(2)}, {vatParams.maxValues.z.toFixed(2)})</span></div>
-                <div className="text-sm">Frame Count: <span>{vatParams.FrameCount}</span></div>
-                <div className="text-sm">Y Resolution: <span>{vatParams.Y_resolution}</span></div>
-              </div>
-            )}
             
             <div className="space-y-3">
               <label className="flex items-center space-x-2 text-sm">
@@ -470,11 +472,41 @@ const VATViewer: React.FC<VATViewerProps> = () => {
                   />
                 </div>
               )}
+
+              {/* VAT Details Info Button */}
+              <div className="pt-2">
+                <button
+                  onClick={() => setShowVATDetails(true)}
+                  className="flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  title="View VAT Details"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span>VAT Details</span>
+                </button>
+              </div>
             </div>
           </div>
 
               {/* Scene Controls */}
               <div className="bg-black text-white p-4 rounded-lg min-w-[250px]">
+                {/* Scene Background Color Control */}
+                <div className="space-y-2 mb-4">
+                  <h5 className="text-sm font-semibold text-gray-300">Scene Background</h5>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0">
+                      <label className="block text-sm mb-1">Color:</label>
+                      <input 
+                        type="color" 
+                        value={sceneBackgroundColor}
+                        onChange={(e) => setSceneBackgroundColor(e.target.value)}
+                        className="w-16 h-8 rounded border border-white/30"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Ambient Light Controls */}
                 <div className="space-y-2">
                   <h5 className="text-sm font-semibold text-gray-300">Ambient Light</h5>
@@ -683,6 +715,66 @@ const VATViewer: React.FC<VATViewerProps> = () => {
             </div>
           </div>
         </div>
+
+        {/* VAT Details Overlay */}
+        {showVATDetails && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+            onClick={handleOverlayBackgroundClick}
+          >
+            <div className="bg-black/90 text-white p-6 rounded-lg max-w-md w-full mx-4 relative">
+              {/* Close Button */}
+              <button
+                onClick={handleVATDetailsClose}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                title="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <h3 className="text-xl font-semibold mb-4">VAT Details</h3>
+              
+              <div className="space-y-4">
+                {/* VAT Position Texture */}
+                <div className="p-3 bg-white/10 rounded">
+                  <h4 className="text-sm font-semibold text-gray-300 mb-2">VAT Position Texture</h4>
+                  <div className="text-sm">
+                    Dimensions: <span className="text-green-400">
+                      {vatTexture?.image ? `${vatTexture.image.width} × ${vatTexture.image.height}` : 'Not loaded'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* VAT Normals Texture */}
+                <div className="p-3 bg-white/10 rounded">
+                  <h4 className="text-sm font-semibold text-gray-300 mb-2">VAT Normals Texture</h4>
+                  <div className="text-sm">
+                    Dimensions: <span className={vatNormalTexture?.image ? 'text-green-400' : 'text-gray-400'}>
+                      {vatNormalTexture?.image ? `${vatNormalTexture.image.width} × ${vatNormalTexture.image.height}` : 'Not loaded'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Remap Info */}
+                <div className="p-3 bg-white/10 rounded">
+                  <h4 className="text-sm font-semibold text-gray-300 mb-2">Remap Info</h4>
+                  {vatParams ? (
+                    <div className="space-y-2 text-sm">
+                      <div>Min Values: <span className="text-blue-400">({vatParams.minValues.x.toFixed(2)}, {vatParams.minValues.y.toFixed(2)}, {vatParams.minValues.z.toFixed(2)})</span></div>
+                      <div>Max Values: <span className="text-blue-400">({vatParams.maxValues.x.toFixed(2)}, {vatParams.maxValues.y.toFixed(2)}, {vatParams.maxValues.z.toFixed(2)})</span></div>
+                      <div>Y Resolution: <span className="text-blue-400">{vatParams.Y_resolution}</span></div>
+                      <div>Frame Count: <span className="text-blue-400">{vatParams.FrameCount}</span></div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-400">Not loaded</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

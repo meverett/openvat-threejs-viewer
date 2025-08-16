@@ -27,6 +27,7 @@ interface SceneProps {
   shouldLoadModel: boolean;
   loading: boolean;
   error: string | null;
+  sceneBackgroundColor: string;
   ambientLightColor: string;
   ambientLightIntensity: number;
   directionalLightColor: string;
@@ -46,6 +47,7 @@ const Scene: React.FC<SceneProps> = ({
   shouldLoadModel,
   loading,
   error,
+  sceneBackgroundColor,
   ambientLightColor,
   ambientLightIntensity,
   directionalLightColor,
@@ -58,17 +60,62 @@ const Scene: React.FC<SceneProps> = ({
   
   const clock = useRef(new THREE.Clock());
   const modelRef = useRef<THREE.Object3D | null>(null);
+  const gridHelperRef = useRef<THREE.GridHelper | null>(null);
+
+  // Function to calculate contrasting colors for grid lines
+  const calculateContrastingColors = (backgroundColor: string) => {
+    // Convert hex to RGB
+    const hex = backgroundColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // If background is dark, use light colors; if light, use dark colors
+    if (luminance < 0.5) {
+      // Dark background - use light grid colors
+      return {
+        primary: 0x888888,    // Light gray
+        secondary: 0x666666   // Lighter gray
+      };
+    } else {
+      // Light background - use dark grid colors
+      return {
+        primary: 0x333333,    // Dark gray
+        secondary: 0x222222   // Darker gray
+      };
+    }
+  };
 
   // Setup scene background
   useEffect(() => {
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(sceneBackgroundColor);
+    
+    // Update grid helper colors to maintain contrast
+    if (gridHelperRef.current) {
+      const gridColors = calculateContrastingColors(sceneBackgroundColor);
+      const material = gridHelperRef.current.material;
+      if (Array.isArray(material)) {
+        // Handle array of materials
+        material.forEach(mat => {
+          if (mat.color) {
+            mat.color.setHex(gridColors.primary);
+          }
+        });
+      } else if (material.color) {
+        // Handle single material
+        material.color.setHex(gridColors.primary);
+      }
+    }
     
     // DEBUG: Test Possibility 4 - Three.js Version Differences
     console.log('=== DEBUG: Three.js Version Differences ===');
     console.log('Three.js version:', THREE.REVISION);
     console.log('WebGL renderer info:', gl.getContext().getParameter(gl.getContext().VERSION));
     console.log('Scene setup complete');
-  }, [scene, gl]);
+  }, [scene, gl, sceneBackgroundColor]);
 
   // Setup lights
   useEffect(() => {
@@ -89,8 +136,10 @@ const Scene: React.FC<SceneProps> = ({
     pointLight.position.set(-10, 10, -10);
     scene.add(pointLight);
 
-    // Grid helper
-    const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+    // Grid helper with contrasting colors
+    const gridColors = calculateContrastingColors(sceneBackgroundColor);
+    const gridHelper = new THREE.GridHelper(20, 20, gridColors.primary, gridColors.secondary);
+    gridHelperRef.current = gridHelper;
     scene.add(gridHelper);
 
     return () => {
