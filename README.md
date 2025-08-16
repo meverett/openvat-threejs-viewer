@@ -36,8 +36,8 @@ Browse to [http://localhost:3000](http://localhost:3000)
 > There is currently an issue with the glTF exporter. In order to get your 
 > model working you will need to select the VAT preview object that is created
 > in the Blender scene after VAT encoding finishes and re-export it as glTF
-> manually. In the export dialog, you may want to turn on `Include > Limit to > Selected Objects`,
-> turn off `Data > Shape Keys` and `Data > Skinning`, and turn off all Animation export.
+> manually. In the export dialog, you may want to turn on **Include > Limit to > Selected Objects**,
+> turn off **Data > Shape Keys** and **Data > Skinning**, and turn off all **Animation** export.
 
 ## Limitations
 
