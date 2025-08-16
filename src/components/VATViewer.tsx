@@ -140,6 +140,9 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   // VAT Details overlay state
   const [showVATDetails, setShowVATDetails] = useState(false);
 
+  // Overlay controls visibility state
+  const [showOverlays, setShowOverlays] = useState(true);
+
   // Reset multi-file loading trigger when model is successfully loaded
   useEffect(() => {
     if (shouldLoadModelFromMultiFile && classifiedFiles?.modelFile && vatTexture && vatParams) {
@@ -152,6 +155,15 @@ const VATViewer: React.FC<VATViewerProps> = () => {
       clearUploadedFiles();
     }
   }, [shouldLoadModelFromMultiFile, classifiedFiles, vatTexture, vatParams]);
+
+  // Set up keyboard event listeners
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Handle multi-file upload and classification
   const handleMultiFileUpload = (files: File[]) => {
@@ -236,6 +248,15 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   const handleOverlayBackgroundClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       setShowVATDetails(false);
+    }
+  };
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Toggle overlays with Ctrl/Cmd + Shift + O
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
+      e.preventDefault();
+      setShowOverlays(prev => !prev);
     }
   };
 
@@ -402,6 +423,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           directionalLightIntensity={directionalLightIntensity}
           pointLightColor={pointLightColor}
           pointLightIntensity={pointLightIntensity}
+          showOverlays={showOverlays}
         />
       </Canvas>
       
@@ -422,7 +444,8 @@ const VATViewer: React.FC<VATViewerProps> = () => {
 
       
       {/* Controls Overlay */}
-      <div className="absolute top-4 right-4 z-10 space-y-4">
+      {showOverlays && (
+        <div className="absolute top-4 right-4 z-10 space-y-4">
           {/* VAT Controls */}
           <div className="bg-black/80 text-white p-4 rounded-lg min-w-[250px]">
             <h4 className="text-lg font-semibold mb-3">VAT Controls</h4>
@@ -598,15 +621,20 @@ const VATViewer: React.FC<VATViewerProps> = () => {
                 </div>
               </div>
         </div>
+      )}
       
       {/* Left Side Controls Container */}
-      <div className="absolute top-4 left-4 z-10 space-y-6">
+      {showOverlays && (
+        <div className="absolute top-4 left-4 z-10 space-y-6">
           {/* Info Panel */}
-          <div className="bg-black/80 text-white p-4 rounded-lg w-48">
+          <div className="bg-black/80 text-white p-4 rounded-lg w-56">
             <h3 className="text-lg font-semibold mb-2">OpenVAT Viewer</h3>
             <p className="text-sm">Mouse: Rotate camera</p>
             <p className="text-sm">Scroll: Zoom in/out</p>
             <p className="text-sm">Right click + drag: Pan</p>
+            <p className="text-sm mt-2 text-blue-400">
+              <kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">Ctrl+Shift+O</kbd> Toggle UI
+            </p>
           </div>
 
           {/* VAT File Upload */}
@@ -715,6 +743,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
             </div>
           </div>
         </div>
+      )}
 
         {/* VAT Details Overlay */}
         {showVATDetails && (

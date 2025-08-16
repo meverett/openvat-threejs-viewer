@@ -34,6 +34,7 @@ interface SceneProps {
   directionalLightIntensity: number;
   pointLightColor: string;
   pointLightIntensity: number;
+  showOverlays: boolean;
 }
 
 const Scene: React.FC<SceneProps> = ({
@@ -53,7 +54,8 @@ const Scene: React.FC<SceneProps> = ({
   directionalLightColor,
   directionalLightIntensity,
   pointLightColor,
-  pointLightIntensity
+  pointLightIntensity,
+  showOverlays
 }) => {
   const { scene, camera, gl } = useThree();
   const [model, setModel] = useState<THREE.Object3D | null>(null);
@@ -93,8 +95,8 @@ const Scene: React.FC<SceneProps> = ({
   useEffect(() => {
     scene.background = new THREE.Color(sceneBackgroundColor);
     
-    // Update grid helper colors to maintain contrast
-    if (gridHelperRef.current) {
+    // Update grid helper colors to maintain contrast (only when grid is visible)
+    if (gridHelperRef.current && showOverlays) {
       const gridColors = calculateContrastingColors(sceneBackgroundColor);
       const material = gridHelperRef.current.material;
       if (Array.isArray(material)) {
@@ -115,7 +117,7 @@ const Scene: React.FC<SceneProps> = ({
     console.log('Three.js version:', THREE.REVISION);
     console.log('WebGL renderer info:', gl.getContext().getParameter(gl.getContext().VERSION));
     console.log('Scene setup complete');
-  }, [scene, gl, sceneBackgroundColor]);
+  }, [scene, gl, sceneBackgroundColor, showOverlays]);
 
   // Setup lights
   useEffect(() => {
@@ -136,19 +138,37 @@ const Scene: React.FC<SceneProps> = ({
     pointLight.position.set(-10, 10, -10);
     scene.add(pointLight);
 
-    // Grid helper with contrasting colors
-    const gridColors = calculateContrastingColors(sceneBackgroundColor);
-    const gridHelper = new THREE.GridHelper(20, 20, gridColors.primary, gridColors.secondary);
-    gridHelperRef.current = gridHelper;
-    scene.add(gridHelper);
-
     return () => {
       scene.remove(ambientLight);
       scene.remove(directionalLight);
       scene.remove(pointLight);
-      scene.remove(gridHelper);
     };
   }, [scene, ambientLightColor, ambientLightIntensity, directionalLightColor, directionalLightIntensity, pointLightColor, pointLightIntensity]);
+
+  // Setup grid helper based on overlay visibility
+  useEffect(() => {
+    if (showOverlays) {
+      // Create and add grid helper when overlays are visible
+      const gridColors = calculateContrastingColors(sceneBackgroundColor);
+      const gridHelper = new THREE.GridHelper(20, 20, gridColors.primary, gridColors.secondary);
+      gridHelperRef.current = gridHelper;
+      scene.add(gridHelper);
+    } else {
+      // Remove grid helper when overlays are hidden
+      if (gridHelperRef.current) {
+        scene.remove(gridHelperRef.current);
+        gridHelperRef.current = null;
+      }
+    }
+
+    return () => {
+      // Cleanup grid helper on unmount or when showOverlays changes
+      if (gridHelperRef.current) {
+        scene.remove(gridHelperRef.current);
+        gridHelperRef.current = null;
+      }
+    };
+  }, [scene, sceneBackgroundColor, showOverlays]);
 
   // Handle model loading
   useEffect(() => {
