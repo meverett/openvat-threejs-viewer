@@ -35,6 +35,7 @@ interface SceneProps {
   pointLightColor: string;
   pointLightIntensity: number;
   showOverlays: boolean;
+  showGrid: boolean;
 }
 
 const Scene: React.FC<SceneProps> = ({
@@ -55,7 +56,8 @@ const Scene: React.FC<SceneProps> = ({
   directionalLightIntensity,
   pointLightColor,
   pointLightIntensity,
-  showOverlays
+  showOverlays,
+  showGrid
 }) => {
   const { scene, camera, gl } = useThree();
   const [model, setModel] = useState<THREE.Object3D | null>(null);
@@ -145,16 +147,16 @@ const Scene: React.FC<SceneProps> = ({
     };
   }, [scene, ambientLightColor, ambientLightIntensity, directionalLightColor, directionalLightIntensity, pointLightColor, pointLightIntensity]);
 
-  // Setup grid helper based on overlay visibility
+  // Setup grid helper
   useEffect(() => {
-    if (showOverlays) {
-      // Create and add grid helper when overlays are visible
+    if (showGrid) {
+      // Create and add grid helper when grid should be visible
       const gridColors = calculateContrastingColors(sceneBackgroundColor);
       const gridHelper = new THREE.GridHelper(20, 20, gridColors.primary, gridColors.secondary);
       gridHelperRef.current = gridHelper;
       scene.add(gridHelper);
     } else {
-      // Remove grid helper when overlays are hidden
+      // Remove grid helper when grid should be hidden
       if (gridHelperRef.current) {
         scene.remove(gridHelperRef.current);
         gridHelperRef.current = null;
@@ -162,13 +164,13 @@ const Scene: React.FC<SceneProps> = ({
     }
 
     return () => {
-      // Cleanup grid helper on unmount or when showOverlays changes
+      // Cleanup grid helper on unmount
       if (gridHelperRef.current) {
         scene.remove(gridHelperRef.current);
         gridHelperRef.current = null;
       }
     };
-  }, [scene, sceneBackgroundColor, showOverlays]);
+  }, [scene, sceneBackgroundColor, showGrid]);
 
   // Handle model loading
   useEffect(() => {

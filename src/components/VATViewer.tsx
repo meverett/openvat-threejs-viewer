@@ -143,6 +143,9 @@ const VATViewer: React.FC<VATViewerProps> = () => {
   // Overlay controls visibility state
   const [showOverlays, setShowOverlays] = useState(true);
 
+  // Grid visibility state
+  const [showGrid, setShowGrid] = useState(true);
+
   // Reset multi-file loading trigger when model is successfully loaded
   useEffect(() => {
     if (shouldLoadModelFromMultiFile && classifiedFiles?.modelFile && vatTexture && vatParams) {
@@ -424,6 +427,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
           pointLightColor={pointLightColor}
           pointLightIntensity={pointLightIntensity}
           showOverlays={showOverlays}
+          showGrid={showGrid}
         />
       </Canvas>
       
@@ -527,6 +531,21 @@ const VATViewer: React.FC<VATViewerProps> = () => {
                         className="w-16 h-8 rounded border border-white/30"
                       />
                     </div>
+                  </div>
+                </div>
+
+                {/* Grid Toggle Control */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center space-x-3">
+                    <label className="flex items-center space-x-2 text-sm">
+                      <input 
+                        type="checkbox" 
+                        checked={showGrid}
+                        onChange={(e) => setShowGrid(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span>Show Grid</span>
+                    </label>
                   </div>
                 </div>
 
