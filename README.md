@@ -48,3 +48,19 @@ Browse to [http://localhost:3000](http://localhost:3000)
 * glTF only (FBX forces trianglution on import in three.js which messes up the vertex count)
 * OpenVAT glTF export currently strips materials during export from Blender, but you can manaully re-add and re-export
 * The viewer supports selecting and loading the separate normals texture, but it is not currently used by the fragment shader
+
+## Loading & Viewing
+
+In the VAT File Upload UI overlay, press the "Browse" button. Browse to the OpenVAT encoded
+output folder. Multi-select all files in the directory (same directory as **OpenVAT Output** in Blender)
+and open them (***.glb**, **.exr/.png**, **.json**). This will upload the files and parse the relevant info from
+the remap info JSON file for VAT playback.
+
+> [!NOTE]
+> Separate VAT normal texture files are optional and are unused by the
+> fragment shader, which is a current limitation and TODO.
+
+### Examples
+
+You can load the examples that are part of this repository located in the
+[/public/vat/](./public/vat) directory.
