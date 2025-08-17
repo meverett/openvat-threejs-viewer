@@ -295,10 +295,10 @@ const Scene: React.FC<SceneProps> = ({
           mesh.material = vatMaterial;
 
           // Configure VAT uniforms
-          if (vatTexture && vatMaterial.uniforms) {
+          if (vatTexture && vatMaterial.uniforms?.vat_position_texture) {
             vatMaterial.uniforms.vat_position_texture.value = vatTexture;
           }
-          if (vatNormalTexture && vatMaterial.uniforms) {
+          if (vatNormalTexture && vatMaterial.uniforms?.vat_normal_texture) {
             vatMaterial.uniforms.vat_normal_texture.value = vatNormalTexture;
           }
           if (vatParams && vatMaterial.uniforms) {
@@ -315,13 +315,29 @@ const Scene: React.FC<SceneProps> = ({
             vatMaterial.uniforms.FrameCount.value = vatParams.FrameCount;
             vatMaterial.uniforms.Y_resolution.value = vatParams.Y_resolution;
             
-            // DEBUG: Verify uniforms were set
-            console.log('Uniforms after setting:', {
-              minValues: vatMaterial.uniforms.minValues.value,
-              maxValues: vatMaterial.uniforms.maxValues.value,
-              FrameCount: vatMaterial.uniforms.FrameCount.value,
-              Y_resolution: vatMaterial.uniforms.Y_resolution.value
-            });
+                         // Apply current UI state values to the newly loaded model
+             if (vatMaterial.uniforms?.ToggleAnimated) {
+               vatMaterial.uniforms.ToggleAnimated.value = isAnimated;
+             }
+             if (vatMaterial.uniforms?.frameSelect) {
+               // Always reset frame to 1 (frame 0 in 0-based indexing) for new models
+               // since different animations may have different total frame counts
+               vatMaterial.uniforms.frameSelect.value = 0;
+             }
+             if (vatMaterial.uniforms?.Speed) {
+               vatMaterial.uniforms.Speed.value = speed;
+             }
+            
+                         // DEBUG: Verify uniforms were set
+             console.log('Uniforms after setting:', {
+               minValues: vatMaterial.uniforms.minValues.value,
+               maxValues: vatMaterial.uniforms.maxValues.value,
+               FrameCount: vatMaterial.uniforms.FrameCount.value,
+               Y_resolution: vatMaterial.uniforms.Y_resolution.value,
+               ToggleAnimated: vatMaterial.uniforms.ToggleAnimated?.value,
+               frameSelect: vatMaterial.uniforms.frameSelect?.value, // Should be 0 for new models
+               Speed: vatMaterial.uniforms.Speed?.value
+             });
 
             // If Position exists on the params, apply it to the mesh
             if (vatParams.Position) {
@@ -364,8 +380,8 @@ const Scene: React.FC<SceneProps> = ({
     
     // Update time uniform for all materials
     scene.traverse((child) => {
-      if (child.isMesh && child.material && child.material.uniforms && child.material.uniforms.time) {
-        child.material.uniforms.time.value = time;
+      if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).material && (child as THREE.Mesh).material.uniforms && (child as THREE.Mesh).material.uniforms.time) {
+        (child as THREE.Mesh).material.uniforms.time.value = time;
       }
     });
   });
@@ -374,15 +390,16 @@ const Scene: React.FC<SceneProps> = ({
   useEffect(() => {
     if (modelRef.current) {
       modelRef.current.traverse((child) => {
-        if (child.isMesh && child.material && child.material.uniforms) {
-          if (child.material.uniforms.ToggleAnimated) {
-            child.material.uniforms.ToggleAnimated.value = isAnimated;
+        if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).material && (child as THREE.Mesh).material.uniforms) {
+          const material = (child as THREE.Mesh).material as any;
+          if (material.uniforms.ToggleAnimated) {
+            material.uniforms.ToggleAnimated.value = isAnimated;
           }
-          if (child.material.uniforms.frameSelect) {
-            child.material.uniforms.frameSelect.value = currentFrame;
+          if (material.uniforms.frameSelect) {
+            material.uniforms.frameSelect.value = currentFrame;
           }
-          if (child.material.uniforms.Speed) {
-            child.material.uniforms.Speed.value = speed;
+          if (material.uniforms.Speed) {
+            material.uniforms.Speed.value = speed;
           }
         }
       });

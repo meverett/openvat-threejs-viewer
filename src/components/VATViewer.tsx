@@ -294,6 +294,10 @@ const VATViewer: React.FC<VATViewerProps> = () => {
       await loadVATRemapInfoFromFile(classified.remapInfoFile, texture);
       console.log('Remap info loaded successfully');
       
+      // Reset frame to 0 for new model since different animations may have different frame counts
+      setCurrentFrame(0);
+      console.log('Frame reset to 0 for new model');
+      
       // Signal that the model should now be loaded from the multi-file system
       setShouldLoadModelFromMultiFile(true);
       
