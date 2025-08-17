@@ -41,7 +41,7 @@ Browse to [http://localhost:3000](http://localhost:3000)
 
 ## Limitations
 
-> [!NOTE]
+> [!IMPORTANT]
 > Currently, models have to be exported with these settings in OpenVAT:
 
 * Separate position and normal textures
