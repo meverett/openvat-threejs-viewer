@@ -98,7 +98,7 @@ const Scene: React.FC<SceneProps> = ({
     scene.background = new THREE.Color(sceneBackgroundColor);
     
     // Update grid helper colors to maintain contrast (only when grid is visible)
-    if (gridHelperRef.current && showOverlays) {
+    if (gridHelperRef.current && showGrid) {
       const gridColors = calculateContrastingColors(sceneBackgroundColor);
       const material = gridHelperRef.current.material;
       if (Array.isArray(material)) {
@@ -119,7 +119,7 @@ const Scene: React.FC<SceneProps> = ({
     console.log('Three.js version:', THREE.REVISION);
     console.log('WebGL renderer info:', gl.getContext().getParameter(gl.getContext().VERSION));
     console.log('Scene setup complete');
-  }, [scene, gl, sceneBackgroundColor, showOverlays]);
+  }, [scene, gl, sceneBackgroundColor, showGrid]);
 
   // Setup lights
   useEffect(() => {

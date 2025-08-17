@@ -166,7 +166,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [showOverlays]);
 
   // Handle multi-file upload and classification
   const handleMultiFileUpload = (files: File[]) => {
@@ -260,6 +260,12 @@ const VATViewer: React.FC<VATViewerProps> = () => {
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
       e.preventDefault();
       setShowOverlays(prev => !prev);
+    }
+    
+    // Toggle overlays back on with ESC key when they're hidden
+    if (e.key === 'Escape' && !showOverlays) {
+      e.preventDefault();
+      setShowOverlays(true);
     }
   };
 
@@ -658,6 +664,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
             <p className="text-sm mt-2 text-blue-400">
               <kbd className="px-1 py-0.5 bg-white/20 rounded text-xs">Ctrl+Shift+O</kbd> Toggle UI
             </p>
+
           </div>
 
           {/* VAT File Upload */}
