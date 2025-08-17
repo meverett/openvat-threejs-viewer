@@ -57,8 +57,10 @@ and open them (***.glb**, **.exr/.png**, **.json**). This will upload the files 
 the remap info JSON file for VAT playback.
 
 > [!NOTE]
-> Separate VAT normal texture files are optional and are unused by the
-> fragment shader, which is a current limitation and TODO.
+> **Separate** VAT textures on export is required as **Packed** files are not yet supported, 
+> but the VAT normals texture file is optional and unused by the
+> fragment shader. This is a current limitation and TODO. You don't need to select
+> the VAT normal texture when uploading, but it's harmless if you do.
 
 ### Examples
 
