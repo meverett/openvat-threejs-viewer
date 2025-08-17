@@ -3,7 +3,7 @@
 An early proof-of-concept WebGL viewer based on [three.js](https://threejs.org/) for viewing
 Vertext Animation Textures exported from [OpenVAT](https://openvat.org/).
 
-![OpenVAT WebGL Viewer Demo Screenshot](./docs/img/DemoScreenshot.png)
+![OpenVAT WebGL Viewer Demo Screenshot](./docs/img/VATViewerAnimation.gif)
 
 ## Stack
 * three.js
