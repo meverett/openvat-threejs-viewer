@@ -94,8 +94,8 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
 
             // Calculate the UV offset for the current frame
             float frameStep = 1.0 / Y_resolution;
-            vec2 VAT_UV_offset = uv1 + vec2(0.0, 1.0 - float(currentFrame) * frameStep);
-            vec2 VAT_UV_offset_next = uv1 + vec2(0.0, 1.0 - float(nextFrame) * frameStep);
+            vec2 VAT_UV_offset = uv1 + vec2(0.0, float(currentFrame) * frameStep);
+            vec2 VAT_UV_offset_next = uv1 + vec2(0.0, float(nextFrame) * frameStep);
 
             // Pass the UV offset to the fragment shader
             v_vat_uv_offset = VAT_UV_offset;
@@ -115,20 +115,51 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
             // Apply the remapped position to the vertex
             transformed += object_space_position;
 
-            // // Sample the VAT normal texture and unpack the normals using UV2
-            // vec3 VAT_normal = texture(vat_normal_texture, VAT_UV_offset).rgb;
-            // vec3 VAT_normal_next = texture(vat_normal_texture, VAT_UV_offset_next).rgb;
-            // VAT_normal = 2.0 * VAT_normal - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
-            // VAT_normal_next = 2.0 * VAT_normal_next - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
-            // VAT_normal.r = -VAT_normal.r; // Flip the R channel
+            // Sample the VAT normal texture and unpack the normals using UV2
+            vec3 VAT_normal = texture(vat_normal_texture, vec2(-VAT_UV_offset.x, VAT_UV_offset.y)).rgb;
+            vec3 VAT_normal_next = texture(vat_normal_texture, vec2(-VAT_UV_offset_next.x, VAT_UV_offset_next.y)).rgb;
+            VAT_normal = 2.0 * VAT_normal - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
+            VAT_normal_next = 2.0 * VAT_normal_next - 1.0; // Unpack the normals from [0, 1] to [-1, 1]
 
-            // // Pass the unpacked normals to the fragment shader
-            // v_vat_normal = normalize(mix(VAT_normal,VAT_normal_next, blend));
+            VAT_normal.r = -VAT_normal.r; // Flip the R channel
+            VAT_normal_next.r = -VAT_normal_next.r; // Flip the R channel
+
+            // Pass the unpacked normals to the fragment shader
+            //v_vat_normal = normalize(mix(VAT_normal,VAT_normal_next, blend));
+            v_vat_normal = VAT_normal;
+            `,
+            fragmentMain: `
+            //normal = normalize(v_vat_normal + normal);
+            //nonPerturbedNormal = normal;
             `
         };
     }
 
     onBeforeCompile(shader) {
+        // console.log("======= Begin Vertex Shader =======");
+        // console.log(shader.vertexShader);
+        // console.log("======= End Vertex Shader =======");
+
+        // console.log("======= Begin Fragment Shader =======");
+        // console.log(shader.fragmentShader);
+        // console.log("======= End Fragment Shader =======");
+
+        //console.log("======= Fragment Shader Chunk =======");
+        //console.log(THREE.ShaderChunk.normal_fragment_begin);
+
+        const originalNormalFragmentBegin = THREE.ShaderChunk.normal_fragment_begin;
+        const customNormalFragmentBegin = THREE.ShaderChunk.normal_fragment_begin.replace(
+            `vec3 normal = normalize( cross( fdx, fdy ) );`,
+            `vec3 normal = normalize( cross( fdx, fdy ) );\nnormal = normalize(v_vat_normal + normal);`
+        ).replace(
+            `vec3 normal = normalize( vNormal );`,
+            `vec3 normal = normalize( vNormal + v_vat_normal );`
+        );
+
+        // console.log(customNormalFragmentBegin);
+
+        THREE.ShaderChunk.normal_fragment_begin = customNormalFragmentBegin;
+
         // Add uniforms to shader
         Object.keys(this.uniforms).forEach(key => {
           shader.uniforms[key] = this.uniforms[key];
@@ -140,9 +171,9 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
                              this.shaderAdditions.varyings + 
                              shader.vertexShader;
         
-        // shader.fragmentShader = this.shaderAdditions.uniforms + 
-        //                        this.shaderAdditions.varyings + 
-        //                        shader.fragmentShader;
+        shader.fragmentShader = this.shaderAdditions.varyings + 
+                                shader.fragmentShader;
+                                
     
         // Add code inside main() functions
         shader.vertexShader = shader.vertexShader.replace(
@@ -151,8 +182,8 @@ export class MeshStandardOpenVATMaterial extends THREE.MeshStandardMaterial {
         );
     
         // shader.fragmentShader = shader.fragmentShader.replace(
-        //   '#include <color_fragment>',
-        //   `#include <color_fragment>\n${this.shaderAdditions.fragmentMain}`
+        //   '#include <normal_fragment_begin>',
+        //   `#include <normal_fragment_begin>\n${this.shaderAdditions.fragmentMain}`
         // );
     
         super.onBeforeCompile && super.onBeforeCompile(shader);

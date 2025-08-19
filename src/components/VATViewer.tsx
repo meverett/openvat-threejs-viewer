@@ -319,8 +319,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
         textureUrl,
         (texture) => {
           URL.revokeObjectURL(textureUrl);
-          texture.wrapS = THREE.ClampToEdgeWrapping;
-          texture.wrapT = THREE.ClampToEdgeWrapping;
+          texture.flipY = true; // flip since VAT position and normals depend on this
           resolve(texture);
         },
         (progress) => {
@@ -343,8 +342,7 @@ const VATViewer: React.FC<VATViewerProps> = () => {
         textureUrl,
         (texture) => {
           URL.revokeObjectURL(textureUrl);
-          texture.wrapS = THREE.ClampToEdgeWrapping;
-          texture.wrapT = THREE.ClampToEdgeWrapping;
+          texture.flipY = true; // flip since VAT position and normals depend on this
           resolve(texture);
         },
         (progress) => {
