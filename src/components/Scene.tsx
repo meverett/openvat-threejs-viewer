@@ -6,6 +6,7 @@ import { OrbitControls } from '@react-three/drei';
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { MeshStandardOpenVATMaterial } from '../threejs/materials/MeshStandardMaterialOpenVAT.js';
 
 interface VATParams {
@@ -65,6 +66,7 @@ const Scene: React.FC<SceneProps> = ({
   const clock = useRef(new THREE.Clock());
   const modelRef = useRef<THREE.Object3D | null>(null);
   const gridHelperRef = useRef<THREE.GridHelper | null>(null);
+  const lightHelperRef = useRef<THREE.Mesh | null>(null);
 
   // Function to calculate contrasting colors for grid lines
   const calculateContrastingColors = (backgroundColor: string) => {
@@ -140,10 +142,23 @@ const Scene: React.FC<SceneProps> = ({
     pointLight.position.set(-10, 10, -10);
     scene.add(pointLight);
 
+    // Create a visual representation of the directional light position
+    const lightHelper = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5, 8, 6),
+      new THREE.MeshBasicMaterial({ color: directionalLightColor, transparent: true, opacity: 0.8 })
+    );
+    lightHelper.position.copy(directionalLight.position);
+    scene.add(lightHelper);
+    lightHelperRef.current = lightHelper;
+
     return () => {
       scene.remove(ambientLight);
       scene.remove(directionalLight);
       scene.remove(pointLight);
+      if (lightHelperRef.current) {
+        scene.remove(lightHelperRef.current);
+        lightHelperRef.current = null;
+      }
     };
   }, [scene, ambientLightColor, ambientLightIntensity, directionalLightColor, directionalLightIntensity, pointLightColor, pointLightIntensity]);
 
@@ -202,27 +217,59 @@ const Scene: React.FC<SceneProps> = ({
         modelRef.current = null;
       }
 
-      const loader = new GLTFLoader();
-      const modelUrl = URL.createObjectURL(modelFile);
-
-      const gltf = await new Promise<{ scene: THREE.Group }>((resolve, reject) => {
-        loader.load(
-          modelUrl,
-          resolve,
-          (progress) => {
-            console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
-          },
-          reject
-        );
-      });
-
-      const loadedModel = gltf.scene;
+      // Determine file type and use appropriate loader
+      const fileName = modelFile.name.toLowerCase();
+      let loadedModel: THREE.Object3D;
       
-      // DEBUG: Test Possibility 1 - GLTF Loading Process
-      console.log('=== DEBUG: GLTF Loading Process ===');
-      console.log('GLTF loaded successfully:', gltf);
+      if (fileName.endsWith('.fbx')) {
+        // Load FBX file
+        const fbxLoader = new FBXLoader();
+        const modelUrl = URL.createObjectURL(modelFile);
+        
+        loadedModel = await new Promise<THREE.Object3D>((resolve, reject) => {
+          fbxLoader.load(
+            modelUrl,
+            resolve,
+            (progress) => {
+              console.log('FBX Loading progress:', (progress.loaded / progress.total * 100) + '%');
+            },
+            reject
+          );
+        });
+        
+        URL.revokeObjectURL(modelUrl);
+        console.log('FBX model loaded successfully');
+        
+      } else if (fileName.endsWith('.gltf') || fileName.endsWith('.glb')) {
+        // Load GLTF file
+        const gltfLoader = new GLTFLoader();
+        const modelUrl = URL.createObjectURL(modelFile);
+        
+        const gltf = await new Promise<{ scene: THREE.Group }>((resolve, reject) => {
+          gltfLoader.load(
+            modelUrl,
+            resolve,
+            (progress) => {
+              console.log('GLTF Loading progress:', (progress.loaded / progress.total * 100) + '%');
+            },
+            reject
+          );
+        });
+        
+        loadedModel = gltf.scene;
+        URL.revokeObjectURL(modelUrl);
+        console.log('GLTF model loaded successfully');
+        
+      } else {
+        throw new Error('Unsupported file format. Please use .fbx, .gltf, or .glb files.');
+      }
+      
+      // DEBUG: Test Possibility 1 - Model Loading Process
+      console.log('=== DEBUG: Model Loading Process ===');
+      console.log('Model loaded successfully:', loadedModel);
       console.log('Loaded model type:', loadedModel.type);
       console.log('Loaded model children count:', loadedModel.children.length);
+      console.log('File type:', fileName.endsWith('.fbx') ? 'FBX' : 'GLTF');
       
       // DEBUG: Test Possibility 2 - Attribute Preservation
       console.log('=== DEBUG: Attribute Preservation ===');
@@ -327,6 +374,18 @@ const Scene: React.FC<SceneProps> = ({
             if (vatParams.Position) {
               mesh.position.set(vatParams.Position.x, vatParams.Position.y, vatParams.Position.z);
             }
+
+            scene.children.forEach(child => {
+                if (child instanceof THREE.Light) {
+                    if (child.type === 'DirectionalLight') {
+                        vatMaterial.uniforms.lightPosition.value = child.position;
+                        vatMaterial.uniforms.lightColor.value = new THREE.Color(child.color.r * child.intensity, child.color.g * child.intensity, child.color.b * child.intensity);
+                    }
+                    else if (child.type === 'AmbientLight') {
+                        vatMaterial.uniforms.ambientColor.value = new THREE.Color(child.color.r * child.intensity, child.color.g * child.intensity, child.color.b * child.intensity);
+                    }
+                }
+            });
           }
 
           mesh.castShadow = false;
@@ -343,8 +402,7 @@ const Scene: React.FC<SceneProps> = ({
       camera.position.set(distance, distance * 0.5, distance);
       camera.lookAt(center);
 
-      URL.revokeObjectURL(modelUrl);
-      console.log('GLTF model loaded successfully with VAT material');
+      console.log(`${fileName.endsWith('.fbx') ? 'FBX' : 'GLTF'} model loaded successfully with VAT material`);
 
     } catch (err) {
       console.error('Error loading model:', err);
@@ -366,6 +424,18 @@ const Scene: React.FC<SceneProps> = ({
     scene.traverse((child) => {
       if (child.isMesh && child.material && child.material.uniforms && child.material.uniforms.time) {
         child.material.uniforms.time.value = time;
+
+        scene.children.forEach(item => {
+            if (item instanceof THREE.Light) {
+                if (item.type === 'DirectionalLight') {
+                  child.material.uniforms.lightPosition.value = child.position;
+                  child.material.uniforms.lightColor.value = new THREE.Color(item.color.r * item.intensity, item.color.g * item.intensity, item.color.b * item.intensity);
+                }
+                else if (item.type === 'AmbientLight') {
+                  child.material.uniforms.ambientColor.value = new THREE.Color(item.color.r * item.intensity, item.color.g * item.intensity, item.color.b * item.intensity);
+                }
+            }
+        });
       }
     });
   });
